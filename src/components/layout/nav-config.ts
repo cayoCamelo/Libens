@@ -1,0 +1,38 @@
+import {
+  CalendarDays,
+  CalendarCheck,
+  Church,
+  Home,
+  Settings2,
+  User,
+  Users,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+
+import type { Perfil } from "@/types/libens";
+
+export interface ItemNav {
+  rotulo: string;
+  to: string;
+  icone: LucideIcon;
+}
+
+const inicio: ItemNav = { rotulo: "Início", to: "/app/inicio", icone: Home };
+const escalas: ItemNav = { rotulo: "Escalas", to: "/app/escalas", icone: CalendarDays };
+const disponibilidade: ItemNav = {
+  rotulo: "Disponibilidade",
+  to: "/app/disponibilidade",
+  icone: CalendarCheck,
+};
+const servosItem: ItemNav = { rotulo: "Servos", to: "/app/servos", icone: Users };
+const ministerios: ItemNav = { rotulo: "Ministérios", to: "/app/ministerios", icone: Church };
+const eventos: ItemNav = { rotulo: "Eventos", to: "/app/eventos", icone: CalendarDays };
+const perfilItem: ItemNav = { rotulo: "Perfil", to: "/app/perfil", icone: User };
+const admin: ItemNav = { rotulo: "Administração", to: "/app/admin", icone: Settings2 };
+
+export const navPorPerfil: Record<Perfil, ItemNav[]> = {
+  servo: [inicio, escalas, disponibilidade, perfilItem],
+  lider: [inicio, escalas, servosItem, disponibilidade, perfilItem],
+  pastor: [inicio, ministerios, escalas, servosItem, eventos, perfilItem],
+  admin: [inicio, escalas, servosItem, ministerios, eventos, admin, perfilItem],
+};
