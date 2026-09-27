@@ -150,10 +150,11 @@ export const disponibilidades: Disponibilidade[] = [
 
 /** Usuário fictício da sessão de demonstração, por perfil. */
 export const usuarioPorPerfil: Record<Perfil, Servo> = {
-  servo: servos[0],
-  lider: servos[1],
-  pastor: servos[7],
+  servo: servos[0]!,
+  lider: servos[1]!,
+  pastor: servos[7]!,
   admin: {
+
     id: "srv-admin",
     nome: "Equipe Libens",
     email: "admin@libens.app",
