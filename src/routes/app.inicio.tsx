@@ -44,7 +44,7 @@ function InicioPage() {
   const minhaDisponibilidade = disponibilidades.filter((d) => d.servoId === usuario.id);
 
   return (
-    <AppShell titulo={`Olá, ${primeiroNome}`} descricao="Veja o que vem por aí">
+    <AppShell titulo={`Olá, ${primeiroNome}`} descricao="Acompanhe o que vem por aí">
       <div className="space-y-7">
         <section aria-labelledby="proxima-escala" className="space-y-3">
           <h2 id="proxima-escala" className="text-sm font-semibold text-muted-foreground">
