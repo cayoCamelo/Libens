@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppInicioRouteImport } from './routes/app.inicio'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,16 +35,23 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppInicioRoute = AppInicioRouteImport.update({
+  id: '/inicio',
+  path: '/inicio',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/recuperar-senha': typeof RecuperarSenhaRoute
+  '/app/inicio': typeof AppInicioRoute
   '/app/': typeof AppIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
+  '/app/inicio': typeof AppInicioRoute
   '/app': typeof AppIndexRoute
 }
 export interface FileRoutesById {
@@ -51,14 +59,15 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/recuperar-senha': typeof RecuperarSenhaRoute
+  '/app/inicio': typeof AppInicioRoute
   '/app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/app' | '/recuperar-senha' | '/app/'
+  fullPaths: '/' | '/app' | '/recuperar-senha' | '/app/inicio' | '/app/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/recuperar-senha' | '/app'
-  id: '__root__' | '/' | '/app' | '/recuperar-senha' | '/app/'
+  to: '/' | '/recuperar-senha' | '/app/inicio' | '/app'
+  id: '__root__' | '/' | '/app' | '/recuperar-senha' | '/app/inicio' | '/app/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -97,14 +106,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/inicio': {
+      id: '/app/inicio'
+      path: '/inicio'
+      fullPath: '/app/inicio'
+      preLoaderRoute: typeof AppInicioRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppInicioRoute: typeof AppInicioRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppInicioRoute: AppInicioRoute,
   AppIndexRoute: AppIndexRoute,
 }
 
