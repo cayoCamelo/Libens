@@ -11,7 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/app'
+import { Route as CadastroRouteImport } from './routes/cadastro'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
+import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppInicioRouteImport } from './routes/app.inicio'
 
@@ -25,9 +28,24 @@ const AppRoute = AppRouteImport.update({
   path: '/app',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CadastroRoute = CadastroRouteImport.update({
+  id: '/cadastro',
+  path: '/cadastro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecuperarSenhaRoute = RecuperarSenhaRouteImport.update({
   id: '/recuperar-senha',
   path: '/recuperar-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RedefinirSenhaRoute = RedefinirSenhaRouteImport.update({
+  id: '/redefinir-senha',
+  path: '/redefinir-senha',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppIndexRoute = AppIndexRouteImport.update({
@@ -44,13 +62,19 @@ const AppInicioRoute = AppInicioRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
+  '/cadastro': typeof CadastroRoute
+  '/login': typeof LoginRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
+  '/redefinir-senha': typeof RedefinirSenhaRoute
   '/app/inicio': typeof AppInicioRoute
   '/app/': typeof AppIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/cadastro': typeof CadastroRoute
+  '/login': typeof LoginRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
+  '/redefinir-senha': typeof RedefinirSenhaRoute
   '/app/inicio': typeof AppInicioRoute
   '/app': typeof AppIndexRoute
 }
@@ -58,22 +82,52 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
+  '/cadastro': typeof CadastroRoute
+  '/login': typeof LoginRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
+  '/redefinir-senha': typeof RedefinirSenhaRoute
   '/app/inicio': typeof AppInicioRoute
   '/app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/app' | '/recuperar-senha' | '/app/inicio' | '/app/'
+  fullPaths:
+    | '/'
+    | '/app'
+    | '/cadastro'
+    | '/login'
+    | '/recuperar-senha'
+    | '/redefinir-senha'
+    | '/app/inicio'
+    | '/app/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/recuperar-senha' | '/app/inicio' | '/app'
-  id: '__root__' | '/' | '/app' | '/recuperar-senha' | '/app/inicio' | '/app/'
+  to:
+    | '/'
+    | '/cadastro'
+    | '/login'
+    | '/recuperar-senha'
+    | '/redefinir-senha'
+    | '/app/inicio'
+    | '/app'
+  id:
+    | '__root__'
+    | '/'
+    | '/app'
+    | '/cadastro'
+    | '/login'
+    | '/recuperar-senha'
+    | '/redefinir-senha'
+    | '/app/inicio'
+    | '/app/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
+  CadastroRoute: typeof CadastroRoute
+  LoginRoute: typeof LoginRoute
   RecuperarSenhaRoute: typeof RecuperarSenhaRoute
+  RedefinirSenhaRoute: typeof RedefinirSenhaRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -92,11 +146,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/cadastro': {
+      id: '/cadastro'
+      path: '/cadastro'
+      fullPath: '/cadastro'
+      preLoaderRoute: typeof CadastroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/recuperar-senha': {
       id: '/recuperar-senha'
       path: '/recuperar-senha'
       fullPath: '/recuperar-senha'
       preLoaderRoute: typeof RecuperarSenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/redefinir-senha': {
+      id: '/redefinir-senha'
+      path: '/redefinir-senha'
+      fullPath: '/redefinir-senha'
+      preLoaderRoute: typeof RedefinirSenhaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/': {
@@ -131,7 +206,10 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
+  CadastroRoute: CadastroRoute,
+  LoginRoute: LoginRoute,
   RecuperarSenhaRoute: RecuperarSenhaRoute,
+  RedefinirSenhaRoute: RedefinirSenhaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
