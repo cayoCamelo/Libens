@@ -37,7 +37,7 @@ function InicioPage() {
   const { usuario } = useSessao();
   const primeiroNome = usuario.nome.split(" ")[0];
 
-  const proxima = escalas[0];
+  const proxima = escalas[0]!;
   const eventoProximo = eventoPorId(proxima.eventoId);
   const ministerioProximo = ministerioPorId(proxima.ministerioId);
   const escalasDoMes = escalas.slice(0, 4);
