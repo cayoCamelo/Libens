@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
 import { LibensLogo } from "@/components/libens-logo";
-import { SeletorPerfil } from "@/components/layout/seletor-perfil";
+import { LogOut } from "lucide-react";
 import { navPorPerfil } from "@/components/layout/nav-config";
 import { useSessao } from "@/lib/perfil-context";
 import { cn } from "@/lib/utils";
@@ -16,7 +16,7 @@ export function AppShell({
   descricao?: string;
   children: ReactNode;
 }) {
-  const { perfil, usuario } = useSessao();
+  const { perfil, usuario, sair } = useSessao();
   const itens = navPorPerfil[perfil];
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
@@ -50,7 +50,14 @@ export function AppShell({
         </nav>
 
         <div className="mt-4 border-t border-border pt-4">
-          <SeletorPerfil />
+          <button
+            type="button"
+            onClick={() => void sair()}
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          >
+            <LogOut className="h-4.5 w-4.5 shrink-0" />
+            Sair
+          </button>
         </div>
       </aside>
 
@@ -69,11 +76,16 @@ export function AppShell({
               ) : null}
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              <div className="md:hidden">
-                <SeletorPerfil compacto />
-              </div>
+              <button
+                type="button"
+                onClick={() => void sair()}
+                aria-label="Sair"
+                className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground md:hidden"
+              >
+                <LogOut className="h-4.5 w-4.5" />
+              </button>
               <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-secondary text-sm font-semibold text-secondary-foreground">
-                {usuario.nome.charAt(0)}
+                {usuario.nome.charAt(0).toUpperCase()}
               </div>
             </div>
           </div>
