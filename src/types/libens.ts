@@ -15,7 +15,7 @@ export interface Servo {
   id: string;
   nome: string;
   email: string;
-  telefone?: string;
+  telefone?: string | undefined;
   perfil: Perfil;
   ministerioIds: string[];
 }

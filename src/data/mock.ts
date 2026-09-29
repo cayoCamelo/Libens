@@ -187,7 +187,7 @@ export function servosDoMinisterio(ministerioId: string) {
 }
 
 export function formatarData(iso: string) {
-  const [ano, mes, dia] = iso.split("-").map(Number);
+  const [ano = 0, mes = 1, dia = 1] = iso.split("-").map(Number);
   const data = new Date(ano, mes - 1, dia);
   return data.toLocaleDateString("pt-BR", {
     weekday: "long",
@@ -197,7 +197,7 @@ export function formatarData(iso: string) {
 }
 
 export function formatarDataCurta(iso: string) {
-  const [ano, mes, dia] = iso.split("-").map(Number);
+  const [ano = 0, mes = 1, dia = 1] = iso.split("-").map(Number);
   const data = new Date(ano, mes - 1, dia);
   return data.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
 }

@@ -16,7 +16,14 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
 import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppAdminRouteImport } from './routes/app.admin'
+import { Route as AppDisponibilidadeRouteImport } from './routes/app.disponibilidade'
+import { Route as AppEscalasRouteImport } from './routes/app.escalas'
+import { Route as AppEventosRouteImport } from './routes/app.eventos'
 import { Route as AppInicioRouteImport } from './routes/app.inicio'
+import { Route as AppMinisteriosRouteImport } from './routes/app.ministerios'
+import { Route as AppPerfilRouteImport } from './routes/app.perfil'
+import { Route as AppServosRouteImport } from './routes/app.servos'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -53,9 +60,44 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminRoute = AppAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDisponibilidadeRoute = AppDisponibilidadeRouteImport.update({
+  id: '/disponibilidade',
+  path: '/disponibilidade',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEscalasRoute = AppEscalasRouteImport.update({
+  id: '/escalas',
+  path: '/escalas',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEventosRoute = AppEventosRouteImport.update({
+  id: '/eventos',
+  path: '/eventos',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppInicioRoute = AppInicioRouteImport.update({
   id: '/inicio',
   path: '/inicio',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMinisteriosRoute = AppMinisteriosRouteImport.update({
+  id: '/ministerios',
+  path: '/ministerios',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPerfilRoute = AppPerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppServosRoute = AppServosRouteImport.update({
+  id: '/servos',
+  path: '/servos',
   getParentRoute: () => AppRoute,
 } as any)
 
@@ -66,7 +108,14 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/app/admin': typeof AppAdminRoute
+  '/app/disponibilidade': typeof AppDisponibilidadeRoute
+  '/app/escalas': typeof AppEscalasRoute
+  '/app/eventos': typeof AppEventosRoute
   '/app/inicio': typeof AppInicioRoute
+  '/app/ministerios': typeof AppMinisteriosRoute
+  '/app/perfil': typeof AppPerfilRoute
+  '/app/servos': typeof AppServosRoute
   '/app/': typeof AppIndexRoute
 }
 export interface FileRoutesByTo {
@@ -75,7 +124,14 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/app/admin': typeof AppAdminRoute
+  '/app/disponibilidade': typeof AppDisponibilidadeRoute
+  '/app/escalas': typeof AppEscalasRoute
+  '/app/eventos': typeof AppEventosRoute
   '/app/inicio': typeof AppInicioRoute
+  '/app/ministerios': typeof AppMinisteriosRoute
+  '/app/perfil': typeof AppPerfilRoute
+  '/app/servos': typeof AppServosRoute
   '/app': typeof AppIndexRoute
 }
 export interface FileRoutesById {
@@ -86,7 +142,14 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/app/admin': typeof AppAdminRoute
+  '/app/disponibilidade': typeof AppDisponibilidadeRoute
+  '/app/escalas': typeof AppEscalasRoute
+  '/app/eventos': typeof AppEventosRoute
   '/app/inicio': typeof AppInicioRoute
+  '/app/ministerios': typeof AppMinisteriosRoute
+  '/app/perfil': typeof AppPerfilRoute
+  '/app/servos': typeof AppServosRoute
   '/app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
@@ -98,7 +161,14 @@ export interface FileRouteTypes {
     | '/login'
     | '/recuperar-senha'
     | '/redefinir-senha'
+    | '/app/admin'
+    | '/app/disponibilidade'
+    | '/app/escalas'
+    | '/app/eventos'
     | '/app/inicio'
+    | '/app/ministerios'
+    | '/app/perfil'
+    | '/app/servos'
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -107,7 +177,14 @@ export interface FileRouteTypes {
     | '/login'
     | '/recuperar-senha'
     | '/redefinir-senha'
+    | '/app/admin'
+    | '/app/disponibilidade'
+    | '/app/escalas'
+    | '/app/eventos'
     | '/app/inicio'
+    | '/app/ministerios'
+    | '/app/perfil'
+    | '/app/servos'
     | '/app'
   id:
     | '__root__'
@@ -117,7 +194,14 @@ export interface FileRouteTypes {
     | '/login'
     | '/recuperar-senha'
     | '/redefinir-senha'
+    | '/app/admin'
+    | '/app/disponibilidade'
+    | '/app/escalas'
+    | '/app/eventos'
     | '/app/inicio'
+    | '/app/ministerios'
+    | '/app/perfil'
+    | '/app/servos'
     | '/app/'
   fileRoutesById: FileRoutesById
 }
@@ -181,6 +265,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/admin': {
+      id: '/app/admin'
+      path: '/admin'
+      fullPath: '/app/admin'
+      preLoaderRoute: typeof AppAdminRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/disponibilidade': {
+      id: '/app/disponibilidade'
+      path: '/disponibilidade'
+      fullPath: '/app/disponibilidade'
+      preLoaderRoute: typeof AppDisponibilidadeRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/escalas': {
+      id: '/app/escalas'
+      path: '/escalas'
+      fullPath: '/app/escalas'
+      preLoaderRoute: typeof AppEscalasRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/eventos': {
+      id: '/app/eventos'
+      path: '/eventos'
+      fullPath: '/app/eventos'
+      preLoaderRoute: typeof AppEventosRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/inicio': {
       id: '/app/inicio'
       path: '/inicio'
@@ -188,16 +300,51 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppInicioRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/ministerios': {
+      id: '/app/ministerios'
+      path: '/ministerios'
+      fullPath: '/app/ministerios'
+      preLoaderRoute: typeof AppMinisteriosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/perfil': {
+      id: '/app/perfil'
+      path: '/perfil'
+      fullPath: '/app/perfil'
+      preLoaderRoute: typeof AppPerfilRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/servos': {
+      id: '/app/servos'
+      path: '/servos'
+      fullPath: '/app/servos'
+      preLoaderRoute: typeof AppServosRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppAdminRoute: typeof AppAdminRoute
+  AppDisponibilidadeRoute: typeof AppDisponibilidadeRoute
+  AppEscalasRoute: typeof AppEscalasRoute
+  AppEventosRoute: typeof AppEventosRoute
   AppInicioRoute: typeof AppInicioRoute
+  AppMinisteriosRoute: typeof AppMinisteriosRoute
+  AppPerfilRoute: typeof AppPerfilRoute
+  AppServosRoute: typeof AppServosRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAdminRoute: AppAdminRoute,
+  AppDisponibilidadeRoute: AppDisponibilidadeRoute,
+  AppEscalasRoute: AppEscalasRoute,
+  AppEventosRoute: AppEventosRoute,
   AppInicioRoute: AppInicioRoute,
+  AppMinisteriosRoute: AppMinisteriosRoute,
+  AppPerfilRoute: AppPerfilRoute,
+  AppServosRoute: AppServosRoute,
   AppIndexRoute: AppIndexRoute,
 }
 
