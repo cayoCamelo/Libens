@@ -8,6 +8,13 @@
       "when": 1790561175364,
       "tag": "0000_profiles_auth",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790731083229,
+      "tag": "0001_etapa3_ministerios_escalas",
+      "breakpoints": true
     }
   ]
 }
