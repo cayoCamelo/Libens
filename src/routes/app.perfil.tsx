@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { rotulosPerfil } from "@/data/mock";
 import { useSessao } from "@/lib/perfil-context";
+import { useDados } from "@/lib/use-dados";
 
 export const Route = createFileRoute("/app/perfil")({
   head: () => ({
@@ -20,6 +21,8 @@ export const Route = createFileRoute("/app/perfil")({
 
 function PerfilPage() {
   const { usuario, carregando, ativo } = useSessao();
+  const d = useDados();
+  const meus = d.ministerios.filter((m) => d.participo.has(m.id) || d.lidero.has(m.id));
   const linhas = [
     { rotulo: "Nome", valor: usuario.nome },
     { rotulo: "E-mail", valor: usuario.email },
@@ -52,6 +55,18 @@ function PerfilPage() {
               </div>
             ))}
           </dl>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">Ministérios</p>
+            <div className="flex flex-wrap gap-1.5">
+              {meus.length === 0 ? <span className="text-sm text-muted-foreground">Nenhum ainda</span> : null}
+              {meus.map((m) => (
+                <Badge key={m.id} variant="secondary">
+                  {m.name}
+                  {d.lidero.has(m.id) ? " · líder" : ""}
+                </Badge>
+              ))}
+            </div>
+          </div>
         </CardContent>
       </Card>
     </AppShell>

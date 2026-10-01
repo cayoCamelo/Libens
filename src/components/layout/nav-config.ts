@@ -31,8 +31,8 @@ const perfilItem: ItemNav = { rotulo: "Perfil", to: "/app/perfil", icone: User }
 const admin: ItemNav = { rotulo: "Administração", to: "/app/admin", icone: Settings2 };
 
 export const navPorPerfil: Record<Perfil, ItemNav[]> = {
-  servo: [inicio, escalas, disponibilidade, perfilItem],
-  lider: [inicio, escalas, servosItem, disponibilidade, perfilItem],
-  pastor: [inicio, ministerios, escalas, servosItem, eventos, perfilItem],
+  servo: [inicio, escalas, disponibilidade, ministerios, perfilItem],
+  lider: [inicio, escalas, ministerios, disponibilidade, servosItem, perfilItem],
+  pastor: [inicio, escalas, ministerios, servosItem, eventos, disponibilidade, perfilItem],
   admin: [inicio, escalas, servosItem, ministerios, eventos, admin, perfilItem],
 };
