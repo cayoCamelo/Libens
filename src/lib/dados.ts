@@ -6,7 +6,28 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Perfil } from "@/types/libens";
 
 export interface MinisterioDb { id: string; name: string; description: string | null; active: boolean }
-export interface PessoaDb { id: string; full_name: string; email: string; role: Perfil; active: boolean }
+export interface PessoaDb {
+  id: string; full_name: string; email: string; phone: string | null; role: Perfil; active: boolean; created_at: string;
+}
+
+export const rotulosPerfil: Record<Perfil, string> = {
+  admin: "Administrador",
+  pastor: "Pastor",
+  lider: "Líder",
+  servo: "Servo",
+};
+
+export function dataBr(iso: string) {
+  const [a, m, d] = iso.slice(0, 10).split("-");
+  return `${d}/${m}/${a}`;
+}
+
+export function traduzirErroDb(e: { message: string; code?: string } | null) {
+  if (!e) return null;
+  if (e.code === "23505") return "Esse vínculo já existe.";
+  if (e.code === "42501" || /row-level security/i.test(e.message)) return "Você não tem permissão para essa ação.";
+  return e.message;
+}
 export interface EventoDb {
   id: string; name: string; description: string | null; date: string;
   start_time: string; end_time: string | null; location: string | null; active: boolean;
@@ -35,7 +56,7 @@ export async function listarMinisterios() {
 }
 export async function listarPessoas() {
   return ok<PessoaDb[]>(
-    await supabase.from("profiles").select("id, full_name, email, role, active").order("full_name"),
+    await supabase.from("profiles").select("id, full_name, email, phone, role, active, created_at").order("full_name"),
   );
 }
 export async function listarMembros() {
