@@ -24,6 +24,7 @@ import { Route as AppInicioRouteImport } from './routes/app.inicio'
 import { Route as AppMinisteriosRouteImport } from './routes/app.ministerios'
 import { Route as AppPerfilRouteImport } from './routes/app.perfil'
 import { Route as AppServosRouteImport } from './routes/app.servos'
+import { Route as AppServosIdRouteImport } from './routes/app.servos_.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -100,6 +101,11 @@ const AppServosRoute = AppServosRouteImport.update({
   path: '/servos',
   getParentRoute: () => AppRoute,
 } as any)
+const AppServosIdRoute = AppServosIdRouteImport.update({
+  id: '/servos_/$id',
+  path: '/servos/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -117,6 +123,7 @@ export interface FileRoutesByFullPath {
   '/app/perfil': typeof AppPerfilRoute
   '/app/servos': typeof AppServosRoute
   '/app/': typeof AppIndexRoute
+  '/app/servos/$id': typeof AppServosIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -133,6 +140,7 @@ export interface FileRoutesByTo {
   '/app/perfil': typeof AppPerfilRoute
   '/app/servos': typeof AppServosRoute
   '/app': typeof AppIndexRoute
+  '/app/servos/$id': typeof AppServosIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -151,6 +159,7 @@ export interface FileRoutesById {
   '/app/perfil': typeof AppPerfilRoute
   '/app/servos': typeof AppServosRoute
   '/app/': typeof AppIndexRoute
+  '/app/servos_/$id': typeof AppServosIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -170,6 +179,7 @@ export interface FileRouteTypes {
     | '/app/perfil'
     | '/app/servos'
     | '/app/'
+    | '/app/servos/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -186,6 +196,7 @@ export interface FileRouteTypes {
     | '/app/perfil'
     | '/app/servos'
     | '/app'
+    | '/app/servos/$id'
   id:
     | '__root__'
     | '/'
@@ -203,6 +214,7 @@ export interface FileRouteTypes {
     | '/app/perfil'
     | '/app/servos'
     | '/app/'
+    | '/app/servos_/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -321,6 +333,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppServosRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/servos_/$id': {
+      id: '/app/servos_/$id'
+      path: '/servos/$id'
+      fullPath: '/app/servos/$id'
+      preLoaderRoute: typeof AppServosIdRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
@@ -334,6 +353,7 @@ interface AppRouteChildren {
   AppPerfilRoute: typeof AppPerfilRoute
   AppServosRoute: typeof AppServosRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppServosIdRoute: typeof AppServosIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -346,6 +366,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppPerfilRoute: AppPerfilRoute,
   AppServosRoute: AppServosRoute,
   AppIndexRoute: AppIndexRoute,
+  AppServosIdRoute: AppServosIdRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

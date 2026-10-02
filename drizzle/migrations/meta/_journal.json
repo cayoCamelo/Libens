@@ -15,6 +15,13 @@
       "when": 1790731083229,
       "tag": "0001_etapa3_ministerios_escalas",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790908277323,
+      "tag": "0002_etapa4_gerenciamento",
+      "breakpoints": true
     }
   ]
 }
