@@ -36,7 +36,7 @@ function MinisteriosPage() {
     return p ? p.full_name || p.email : "Usuário";
   };
 
-  const executar = async (p: PromiseLike<{ error: { message: string } | null }>) => {
+  const executar = async (p: PromiseLike<{ error: { message: string; code?: string } | null }>) => {
     setErro(null);
     const { error } = await p;
     if (error) setErro(error.code === "23505" ? "Essa pessoa já está nesse ministério." : error.message);
