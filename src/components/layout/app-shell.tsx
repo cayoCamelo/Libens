@@ -1,8 +1,8 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import { LibensLogo } from "@/components/libens-logo";
-import { LogOut } from "lucide-react";
+import { LogOut, Moon, Sun } from "lucide-react";
 import { navPorPerfil } from "@/components/layout/nav-config";
 import { useSessao } from "@/lib/perfil-context";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,20 @@ export function AppShell({
   const { perfil, usuario, sair } = useSessao();
   const itens = navPorPerfil[perfil];
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [modoEscuro, setModoEscuro] = useState(false);
+
+  useEffect(() => {
+    const escuro = localStorage.getItem("libens-tema") === "escuro";
+    setModoEscuro(escuro);
+    document.documentElement.classList.toggle("dark", escuro);
+  }, []);
+
+  const alternarTema = () => {
+    const escuro = !modoEscuro;
+    setModoEscuro(escuro);
+    localStorage.setItem("libens-tema", escuro ? "escuro" : "claro");
+    document.documentElement.classList.toggle("dark", escuro);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -76,6 +90,15 @@ export function AppShell({
               ) : null}
             </div>
             <div className="flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                onClick={alternarTema}
+                aria-label={modoEscuro ? "Ativar modo claro" : "Ativar modo escuro"}
+                title={modoEscuro ? "Ativar modo claro" : "Ativar modo escuro"}
+                className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              >
+                {modoEscuro ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
+              </button>
               <button
                 type="button"
                 onClick={() => void sair()}
