@@ -46,7 +46,7 @@ export const Route = createFileRoute("/app/ministerios_/$id")({
   component: DetalheMinisterio,
 });
 
-type Remocao = { vinculoId: string; userId: string; liderId?: string; futuras: number };
+type Remocao = { vinculoId: string; userId: string; liderId?: string | undefined; futuras: number };
 
 function DetalheMinisterio() {
   const { id } = Route.useParams();
