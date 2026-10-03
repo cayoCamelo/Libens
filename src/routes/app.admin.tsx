@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { rotulosPerfil } from "@/data/mock";
+import { rotulosPerfil } from "@/lib/dados";
 import { supabase } from "@/integrations/supabase/client";
 import { useSessao } from "@/lib/perfil-context";
 import { useDados } from "@/lib/use-dados";

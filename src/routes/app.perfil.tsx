@@ -55,6 +55,7 @@ function PerfilPage() {
               </div>
             ))}
           </dl>
+          <EditarMeusDados />
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">Ministérios</p>
             <div className="flex flex-wrap gap-1.5">
