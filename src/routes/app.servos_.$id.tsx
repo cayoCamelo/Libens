@@ -53,7 +53,7 @@ function DetalheServo() {
     </Link>
   );
 
-  if (!p) {
+  if (!p || (p.role === "admin" && !d.global)) {
     return (
       <AppShell titulo="Servo">
         {voltar}

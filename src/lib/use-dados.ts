@@ -48,6 +48,11 @@ export function useDados() {
       escalas: escalas.data ?? [],
       necessidades: necessidades.data ?? [],
       global,
+      nomePessoa: (id: string) => {
+        const pessoa = (pessoas.data ?? []).find((p) => p.id === id);
+        if (!pessoa) return "Usuário";
+        return !global && pessoa.role === "admin" ? "Administrador" : pessoa.full_name || pessoa.email;
+      },
       lidero,
       participo,
       podeGerenciar: (ministryId: string) => global || lidero.has(ministryId),

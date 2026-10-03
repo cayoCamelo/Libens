@@ -38,11 +38,6 @@ function MinisteriosPage() {
     : d.lidero.size > 0
       ? d.ministerios.filter((m) => d.lidero.has(m.id))
       : d.ministerios.filter((m) => d.participo.has(m.id));
-  const nomePessoa = (id: string) => {
-    const p = d.pessoas.find((x) => x.id === id);
-    return p ? p.full_name || p.email : "Usuário";
-  };
-
   const criar = async () => {
     setErro(null);
     if (!nome.trim()) return setErro("Informe o nome.");
@@ -91,7 +86,7 @@ function MinisteriosPage() {
                   <div className="flex flex-wrap gap-1.5">
                     {lideres.length === 0 ? <span className="text-xs text-muted-foreground">Sem líder</span> : null}
                     {lideres.map((l) => (
-                      <Badge key={l.id} className="gap-1"><Crown className="h-3 w-3" /> {nomePessoa(l.user_id)}</Badge>
+                      <Badge key={l.id} className="gap-1"><Crown className="h-3 w-3" /> {d.nomePessoa(l.user_id)}</Badge>
                     ))}
                   </div>
                 </CardContent>

@@ -40,7 +40,7 @@ function ServosPage() {
     const ids = new Set(d.membros.filter((m) => base.has(m.ministry_id)).map((m) => m.user_id));
     d.lideres.filter((l) => base.has(l.ministry_id)).forEach((l) => ids.add(l.user_id));
     ids.add(usuario.id);
-    return d.pessoas.filter((p) => ids.has(p.id));
+    return d.pessoas.filter((p) => ids.has(p.id) && p.role !== "admin");
   }, [d, usuario.id]);
 
   const ministeriosFiltro = d.global

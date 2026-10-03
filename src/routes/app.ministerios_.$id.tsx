@@ -87,7 +87,7 @@ function DetalheMinisterio() {
   const membros = d.membros.filter((x) => x.ministry_id === m.id);
   const lideres = d.lideres.filter((x) => x.ministry_id === m.id);
   const pessoa = (uid: string) => d.pessoas.find((p) => p.id === uid);
-  const nomeP = (uid: string) => { const p = pessoa(uid); return p ? p.full_name || p.email : "Usuário"; };
+  const nomeP = (uid: string) => d.nomePessoa(uid);
   const eventoDe = (eid: string) => d.eventos.find((e) => e.id === eid);
   const escalasFuturas = d.escalas
     .filter((s) => s.ministry_id === m.id && (eventoDe(s.event_id)?.date ?? "") >= hoje)
@@ -105,7 +105,7 @@ function DetalheMinisterio() {
   };
 
   const candidatos = d.pessoas.filter(
-    (p) => p.active && !membros.some((x) => x.user_id === p.id) &&
+    (p) => p.active && (d.global || p.role !== "admin") && !membros.some((x) => x.user_id === p.id) &&
       (p.full_name.toLowerCase().includes(busca.toLowerCase()) || p.email.toLowerCase().includes(busca.toLowerCase())),
   );
 

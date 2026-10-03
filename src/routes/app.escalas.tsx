@@ -29,7 +29,6 @@ function EscalasPage() {
   const d = useDados();
   const [editor, setEditor] = useState<{ eventId: string; ministryId: string } | null | undefined>(undefined);
   const podeCriar = d.global || d.lidero.size > 0;
-  const nome = (id: string) => { const p = d.pessoas.find((x) => x.id === id); return p ? p.full_name || p.email : "Servo"; };
 
   // Agrupa por evento + ministério
   const grupos = d.eventos.flatMap((e) =>
@@ -66,7 +65,7 @@ function EscalasPage() {
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  {itens.map((s) => <Badge key={s.id} variant="secondary">{nome(s.user_id)}</Badge>)}
+                  {itens.map((s) => <Badge key={s.id} variant="secondary">{d.nomePessoa(s.user_id)}</Badge>)}
                 </div>
                 {d.podeGerenciar(m.id) ? (
                   <Button size="sm" variant="outline" onClick={() => setEditor({ eventId: e.id, ministryId: m.id })}>

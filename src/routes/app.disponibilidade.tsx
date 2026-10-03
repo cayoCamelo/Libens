@@ -48,7 +48,7 @@ function DisponibilidadePage() {
   // Pessoas cuja disponibilidade posso consultar
   const consultaveis = d.global
     ? d.pessoas
-    : d.pessoas.filter((p) => d.membros.some((m) => m.user_id === p.id && d.lidero.has(m.ministry_id)));
+    : d.pessoas.filter((p) => p.role !== "admin" && d.membros.some((m) => m.user_id === p.id && d.lidero.has(m.ministry_id)));
 
   const q = useQuery({
     queryKey: ["libens", "disp", pessoaId],
