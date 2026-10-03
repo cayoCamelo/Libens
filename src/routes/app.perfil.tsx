@@ -1,9 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { rotulosPerfil } from "@/data/mock";
+import { rotulosPerfil } from "@/lib/dados";
 import { useSessao } from "@/lib/perfil-context";
 import { useDados } from "@/lib/use-dados";
 
@@ -71,5 +75,27 @@ function PerfilPage() {
         </CardContent>
       </Card>
     </AppShell>
+  );
+}
+
+function EditarMeusDados() {
+  const { usuario, recarregarPerfil } = useSessao();
+  const [nome, setNome] = useState(usuario.nome);
+  const [tel, setTel] = useState(usuario.telefone ?? "");
+  const [msg, setMsg] = useState<string | null>(null);
+  useEffect(() => { setNome(usuario.nome); setTel(usuario.telefone ?? ""); }, [usuario.nome, usuario.telefone]);
+  const salvar = async () => {
+    const { error } = await supabase.from("profiles").update({ full_name: nome.trim(), phone: tel.trim() || null }).eq("id", usuario.id);
+    setMsg(error ? error.message : "Dados salvos.");
+    await recarregarPerfil();
+  };
+  return (
+    <div className="space-y-3 border-t border-border pt-4">
+      <p className="text-sm font-medium text-foreground">Editar meus dados</p>
+      <Input value={nome} onChange={(e) => setNome(e.target.value)} aria-label="Nome" placeholder="Nome" />
+      <Input value={tel} onChange={(e) => setTel(e.target.value)} aria-label="Telefone" placeholder="Telefone" />
+      <Button size="sm" onClick={() => void salvar()}>Salvar</Button>
+      {msg ? <p className="text-xs text-muted-foreground">{msg}</p> : null}
+    </div>
   );
 }
