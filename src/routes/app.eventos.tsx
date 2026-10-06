@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { CalendarPlus, Plus } from "lucide-react";
 import { useState } from "react";
 
 import { AppShell } from "@/components/layout/app-shell";
@@ -10,7 +11,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatarData } from "@/data/mock";
 import { supabase } from "@/integrations/supabase/client";
-import { hora, type EventoDb } from "@/lib/dados";
+import { hora, listarModelos, type EventoDb } from "@/lib/dados";
+
+const diasSemana = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
 import { useDados } from "@/lib/use-dados";
 
 export const Route = createFileRoute("/app/eventos")({
@@ -41,6 +44,15 @@ function EventosPage() {
   const [form, setForm] = useState<Form | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
+  const [aviso, setAviso] = useState<string | null>(null);
+  const modelos = useQuery({ queryKey: ["libens", "modelos"], queryFn: listarModelos });
+
+  const gerarProximos = async () => {
+    setAviso(null);
+    const { data, error } = await supabase.rpc("generate_template_events", { _months: 3 });
+    setAviso(error ? error.message : data ? `${data} evento(s) criado(s) para os próximos 3 meses.` : "Os próximos eventos já estavam criados.");
+    await d.recarregar();
+  };
 
   const abrir = (e?: EventoDb) => {
     setErro(null);
@@ -92,11 +104,27 @@ function EventosPage() {
 
   return (
     <AppShell titulo="Eventos" descricao="Programação">
-      {d.global ? (
-        <Button className="mb-4 w-full sm:w-auto" onClick={() => abrir()}>
-          <Plus className="h-4 w-4" /> Novo evento
-        </Button>
-      ) : null}
+      <Card className="mb-4">
+        <CardContent className="space-y-2 p-4">
+          <p className="text-sm font-semibold text-foreground">Eventos padrão</p>
+          {(modelos.data ?? []).map((t) => (
+            <p key={t.id} className="text-sm text-muted-foreground">
+              {t.name} · toda {diasSemana[t.weekday]} · {hora(t.start_time)}{t.end_time ? `–${hora(t.end_time)}` : ""}
+            </p>
+          ))}
+          {d.global ? (
+            <div className="flex flex-wrap gap-2 pt-1">
+              <Button size="sm" variant="secondary" onClick={() => void gerarProximos()}>
+                <CalendarPlus className="h-4 w-4" /> Gerar próximos eventos
+              </Button>
+              <Button size="sm" onClick={() => abrir()}>
+                <Plus className="h-4 w-4" /> Novo evento
+              </Button>
+            </div>
+          ) : null}
+          {aviso ? <p className="text-xs text-muted-foreground">{aviso}</p> : null}
+        </CardContent>
+      </Card>
       <div className="space-y-3">
         {d.eventos.map((e) => {
           const needs = d.necessidades.filter((n) => n.event_id === e.id);
@@ -136,14 +164,14 @@ function EventosPage() {
               {campo("location", "Local")}
               {campo("description", "Descrição")}
               <div className="space-y-2">
-                <p className="text-sm font-medium text-foreground">Pessoas necessárias por ministério</p>
+                <p className="text-sm font-medium text-foreground">Pessoas necessárias por ministério (opcional, 0 = livre)</p>
                 {d.ministerios.map((m) => (
                   <div key={m.id} className="flex items-center justify-between gap-3">
                     <span className="text-sm text-foreground">{m.name}</span>
                     <Input
-                      type="number" min={0} className="w-20" aria-label={`Quantidade ${m.name}`}
+                      type="number" min={0} max={100} className="w-20" aria-label={`Quantidade ${m.name}`}
                       value={form.needs[m.id] ?? 0}
-                      onChange={(e) => setForm({ ...form, needs: { ...form.needs, [m.id]: Math.max(0, Number(e.target.value) || 0) } })}
+                      onChange={(e) => setForm({ ...form, needs: { ...form.needs, [m.id]: Math.min(100, Math.max(0, Number(e.target.value) || 0)) } })}
                     />
                   </div>
                 ))}

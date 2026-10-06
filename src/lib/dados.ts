@@ -108,3 +108,10 @@ export function hora(t: string | null | undefined) {
 export function nomeCurto(nome: string) {
   return nome.trim() || "Sem nome";
 }
+
+export interface ModeloEventoDb { id: string; name: string; weekday: number; start_time: string; end_time: string | null; active: boolean }
+export async function listarModelos() {
+  return ok<ModeloEventoDb[]>(
+    await supabase.from("event_templates").select("id, name, weekday, start_time, end_time, active").order("weekday", { ascending: false }),
+  );
+}
