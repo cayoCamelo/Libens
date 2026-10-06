@@ -91,6 +91,39 @@ export type Database = {
           },
         ]
       }
+      event_templates: {
+        Row: {
+          active: boolean
+          created_at: string
+          end_time: string | null
+          id: string
+          location: string | null
+          name: string
+          start_time: string
+          weekday: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          location?: string | null
+          name: string
+          start_time: string
+          weekday: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          location?: string | null
+          name?: string
+          start_time?: string
+          weekday?: number
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           active: boolean
@@ -102,6 +135,7 @@ export type Database = {
           location: string | null
           name: string
           start_time: string
+          template_id: string | null
           updated_at: string
         }
         Insert: {
@@ -114,6 +148,7 @@ export type Database = {
           location?: string | null
           name: string
           start_time: string
+          template_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -126,9 +161,18 @@ export type Database = {
           location?: string | null
           name?: string
           start_time?: string
+          template_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "events_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "event_templates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ministries: {
         Row: {
@@ -285,6 +329,7 @@ export type Database = {
           replaces_schedule_id: string | null
           status: string
           updated_at: string
+          updated_by: string | null
           user_id: string
         }
         Insert: {
@@ -297,6 +342,7 @@ export type Database = {
           replaces_schedule_id?: string | null
           status?: string
           updated_at?: string
+          updated_by?: string | null
           user_id: string
         }
         Update: {
@@ -309,6 +355,7 @@ export type Database = {
           replaces_schedule_id?: string | null
           status?: string
           updated_at?: string
+          updated_by?: string | null
           user_id?: string
         }
         Relationships: [
@@ -338,6 +385,13 @@ export type Database = {
             columns: ["replaces_schedule_id"]
             isOneToOne: false
             referencedRelation: "schedules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedules_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -394,6 +448,7 @@ export type Database = {
         Args: { _mid: string; _uid: string }
         Returns: boolean
       }
+      generate_template_events: { Args: { _months?: number }; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
