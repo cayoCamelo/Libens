@@ -9,13 +9,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { dataBr, rotulosPerfil, traduzirErroDb } from "@/lib/dados";
 import { useSessao } from "@/lib/perfil-context";
 import { useDados } from "@/lib/use-dados";
-import type { Perfil } from "@/types/libens";
 
 export const Route = createFileRoute("/app/servos_/$id")({
   head: () => ({
@@ -29,7 +26,6 @@ export const Route = createFileRoute("/app/servos_/$id")({
   component: DetalheServo,
 });
 
-const funcoesEditaveis: Perfil[] = ["servo", "lider", "pastor"];
 
 function DetalheServo() {
   const { id } = Route.useParams();
