@@ -24,6 +24,8 @@ export function dataBr(iso: string) {
 
 export function traduzirErroDb(e: { message: string; code?: string } | null) {
   if (!e) return null;
+  if (e.message.includes("schedules_user_event_unique")) return "Este membro já está escalado para outro ministério neste evento.";
+  if (e.code === "P0001") return e.message;
   if (e.code === "23505") return "Esse vínculo já existe.";
   if (e.code === "42501" || /row-level security/i.test(e.message)) return "Você não tem permissão para essa ação.";
   return e.message;
@@ -34,6 +36,7 @@ export interface EventoDb {
 }
 export interface EscalaDb {
   id: string; event_id: string; ministry_id: string; user_id: string; status: string; created_at: string;
+  created_by: string | null; updated_by: string | null; updated_at: string;
 }
 export interface NecessidadeDb { id: string; event_id: string; ministry_id: string; required_count: number }
 
@@ -83,13 +86,13 @@ export async function listarEscalas() {
   return ok<EscalaDb[]>(
     await supabase
       .from("schedules")
-      .select("id, event_id, ministry_id, user_id, status, created_at")
+      .select("id, event_id, ministry_id, user_id, status, created_at, created_by, updated_by, updated_at")
       .not("status", "in", "(cancelled,replaced)"),
   );
 }
 export async function listarTodasEscalas() {
   return ok<EscalaDb[]>(
-    await supabase.from("schedules").select("id, event_id, ministry_id, user_id, status, created_at"),
+    await supabase.from("schedules").select("id, event_id, ministry_id, user_id, status, created_at, created_by, updated_by, updated_at"),
   );
 }
 export async function listarDisponibilidade(userIds?: string[]) {
@@ -104,4 +107,11 @@ export function hora(t: string | null | undefined) {
 
 export function nomeCurto(nome: string) {
   return nome.trim() || "Sem nome";
+}
+
+export interface ModeloEventoDb { id: string; name: string; weekday: number; start_time: string; end_time: string | null; active: boolean }
+export async function listarModelos() {
+  return ok<ModeloEventoDb[]>(
+    await supabase.from("event_templates").select("id, name, weekday, start_time, end_time, active").order("weekday", { ascending: false }),
+  );
 }

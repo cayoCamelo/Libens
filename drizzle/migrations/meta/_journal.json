@@ -22,6 +22,13 @@
       "when": 1790908277323,
       "tag": "0002_etapa4_gerenciamento",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791254394158,
+      "tag": "0003_eventos_padrao_escalas_lider",
+      "breakpoints": true
     }
   ]
 }

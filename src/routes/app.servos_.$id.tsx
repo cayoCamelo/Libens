@@ -9,13 +9,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { dataBr, rotulosPerfil, traduzirErroDb } from "@/lib/dados";
 import { useSessao } from "@/lib/perfil-context";
 import { useDados } from "@/lib/use-dados";
-import type { Perfil } from "@/types/libens";
 
 export const Route = createFileRoute("/app/servos_/$id")({
   head: () => ({
@@ -29,7 +26,6 @@ export const Route = createFileRoute("/app/servos_/$id")({
   component: DetalheServo,
 });
 
-const funcoesEditaveis: Perfil[] = ["servo", "lider", "pastor"];
 
 function DetalheServo() {
   const { id } = Route.useParams();
@@ -123,28 +119,17 @@ function DetalheServo() {
             <span className="text-sm text-muted-foreground">Função</span>
             {ehAdminAlvo ? (
               <Badge className="gap-1"><Lock className="h-3 w-3" /> Administrador (protegido)</Badge>
-            ) : souAdmin ? (
-              <Select value={p.role} onValueChange={(v) => void executar(supabase.from("profiles").update({ role: v as Perfil }).eq("id", p.id), "Função alterada.")}>
-                <SelectTrigger className="w-36" aria-label="Função"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {funcoesEditaveis.map((f) => <SelectItem key={f} value={f}>{rotulosPerfil[f]}</SelectItem>)}
-                </SelectContent>
-              </Select>
             ) : (
               <Badge variant="outline">{rotulosPerfil[p.role]}</Badge>
             )}
-          </div>
-          <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground">Status</span>
-            {souAdmin && !ehAdminAlvo ? (
-              <label className="flex items-center gap-2 text-sm">
-                <Switch checked={p.active} onCheckedChange={(v) => void executar(supabase.from("profiles").update({ active: v }).eq("id", p.id))} aria-label="Ativo" />
-                {p.active ? "Ativo" : "Inativo"}
-              </label>
-            ) : (
-              <Badge variant={p.active ? "outline" : "secondary"}>{p.active ? "Ativo" : "Inativo"}</Badge>
-            )}
+            <Badge variant={p.active ? "outline" : "secondary"}>{p.active ? "Ativo" : "Inativo"}</Badge>
           </div>
+          {souAdmin && !ehAdminAlvo ? (
+            <Link to="/app/admin" className="text-xs font-medium text-primary hover:underline">
+              Alterar função ou status em Administração
+            </Link>
+          ) : null}
           <p className="text-xs text-muted-foreground">Cadastro em {dataBr(p.created_at)}</p>
         </CardContent>
       </Card>
