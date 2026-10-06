@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -16,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { formatarData } from "@/data/mock";
 import { supabase } from "@/integrations/supabase/client";
-import { hora, listarDisponibilidade } from "@/lib/dados";
+import { hora, listarDisponibilidade, traduzirErroDb } from "@/lib/dados";
 import { gerarEscala, type Candidato } from "@/lib/gerador-escala";
 import { useSessao } from "@/lib/perfil-context";
 import { useDados } from "@/lib/use-dados";
@@ -34,7 +33,7 @@ export function EditorEscala({
   const d = useDados();
   const [eventId, setEventId] = useState("");
   const [ministryId, setMinistryId] = useState("");
-  const [qtd, setQtd] = useState(1);
+  const [qtd, setQtd] = useState(0);
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [indic, setIndic] = useState<Map<string, Candidato> | null>(null);
   const [aviso, setAviso] = useState<{ nec: number; disp: number } | null>(null);
@@ -47,6 +46,11 @@ export function EditorEscala({
     () => d.escalas.filter((s) => s.event_id === eventId && s.ministry_id === ministryId),
     [d.escalas, eventId, ministryId],
   );
+  const ocupados = useMemo(
+    () => new Set(d.escalas.filter((s) => s.event_id === eventId && s.ministry_id !== ministryId).map((s) => s.user_id)),
+    [d.escalas, eventId, ministryId],
+  );
+  const podeExcluir = existentes.length > 0 && (d.global || existentes.every((s) => s.created_by === usuario.id && d.lidero.has(s.ministry_id)));
   const membros = useMemo(() => {
     const ids = new Set(d.membros.filter((m) => m.ministry_id === ministryId).map((m) => m.user_id));
     return d.pessoas.filter((p) => ids.has(p.id));
@@ -72,7 +76,7 @@ export function EditorEscala({
   useEffect(() => {
     setSel(new Set(existentes.map((s) => s.user_id)));
     const n = d.necessidades.find((x) => x.event_id === eventId && x.ministry_id === ministryId);
-    setQtd(n?.required_count ?? Math.max(1, existentes.length));
+    setQtd(n?.required_count ?? 0);
     setIndic(null);
     setAviso(null);
   }, [eventId, ministryId, existentes, d.necessidades]);
@@ -88,13 +92,13 @@ export function EditorEscala({
       (disp.data ?? []).filter((x) => x.date === evento.date && x.available).map((x) => x.user_id),
     );
     const r = gerarEscala({
-      evento, ministryId, necessarios: qtd, membros, disponiveisNaData: disponiveis,
+      evento, ministryId, necessarios: qtd > 0 ? qtd : membros.length, membros, disponiveisNaData: disponiveis,
       escalas: d.escalas.filter((s) => !(s.event_id === evento.id && s.ministry_id === ministryId && s.status === "draft")),
       eventos: d.eventos,
     });
     setIndic(new Map(r.elegiveis.map((c) => [c.pessoa.id, c])));
     setSel(new Set(r.sugeridos.map((c) => c.pessoa.id)));
-    setAviso(r.faltam > 0 ? { nec: qtd, disp: r.sugeridos.length } : null);
+    setAviso(qtd > 0 && r.faltam > 0 ? { nec: qtd, disp: r.sugeridos.length } : null);
   };
 
   const salvar = async (publicar: boolean) => {
@@ -122,18 +126,30 @@ export function EditorEscala({
           .eq("event_id", evento.id).eq("ministry_id", ministryId).eq("status", "draft");
         if (r.error) throw r.error;
       }
-      const r = await supabase.from("event_ministry_needs").upsert(
-        { event_id: evento.id, ministry_id: ministryId, required_count: qtd },
-        { onConflict: "event_id,ministry_id" },
-      );
-      if (r.error) throw r.error;
+      if (qtd > 0 || d.necessidades.some((x) => x.event_id === evento.id && x.ministry_id === ministryId)) {
+        const r = await supabase.from("event_ministry_needs").upsert(
+          { event_id: evento.id, ministry_id: ministryId, required_count: qtd },
+          { onConflict: "event_id,ministry_id" },
+        );
+        if (r.error) throw r.error;
+      }
       await d.recarregar();
       onFechar();
     } catch (e) {
-      setErro((e as { message?: string }).message ?? "Erro ao salvar");
+      setErro(traduzirErroDb(e as { message: string; code?: string }) ?? "Erro ao salvar");
     } finally {
       setSalvando(false);
     }
+  };
+
+  const excluir = async () => {
+    if (!window.confirm("Excluir esta escala? Essa ação não pode ser desfeita.")) return;
+    setSalvando(true);
+    const r = await supabase.from("schedules").delete().in("id", existentes.map((s) => s.id));
+    setSalvando(false);
+    if (r.error) return setErro(traduzirErroDb(r.error));
+    await d.recarregar();
+    onFechar();
   };
 
   return (
@@ -171,9 +187,15 @@ export function EditorEscala({
               </p>
               <div className="flex items-end gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="qtd">Pessoas necessárias</Label>
-                  <Input id="qtd" type="number" min={1} className="w-24" value={qtd}
-                    onChange={(e) => setQtd(Math.max(1, Number(e.target.value) || 1))} />
+                  <Label>Pessoas necessárias (opcional)</Label>
+                  <Select value={String(qtd)} onValueChange={(v) => setQtd(Number(v))}>
+                    <SelectTrigger className="w-28" aria-label="Pessoas necessárias"><SelectValue /></SelectTrigger>
+                    <SelectContent className="max-h-64">
+                      {Array.from({ length: 101 }, (_, i) => (
+                        <SelectItem key={i} value={String(i)}>{i === 0 ? "Livre" : i}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <Button variant="secondary" className="flex-1" onClick={gerar} disabled={disp.isLoading}>
                   <Sparkles className="h-4 w-4" /> Gerar escala automaticamente
@@ -194,20 +216,23 @@ export function EditorEscala({
               {indic ? <p className="text-sm font-semibold text-foreground">Escala sugerida — revise antes de publicar</p> : null}
 
               <div className="space-y-2">
-                <p className="text-sm font-medium text-foreground">Servos ({sel.size}/{qtd})</p>
+                <p className="text-sm font-medium text-foreground">Membros do ministério ({sel.size}{qtd > 0 ? `/${qtd}` : " selecionados"})</p>
                 {membros.length === 0 ? <p className="text-sm text-muted-foreground">Este ministério ainda não tem membros.</p> : null}
                 {membros.map((p) => {
                   const c = indic?.get(p.id);
                   const st = statusDisp(p.id);
+                  const ocupado = ocupados.has(p.id);
                   return (
                     <label key={p.id} className="flex items-start gap-3 rounded-lg border border-border p-3">
                       <Checkbox
                         checked={sel.has(p.id)}
+                        disabled={ocupado && !sel.has(p.id)}
                         onCheckedChange={(v) => setSel((s) => { const n = new Set(s); if (v) n.add(p.id); else n.delete(p.id); return n; })}
                         className="mt-0.5"
                       />
                       <div className="min-w-0 flex-1 text-sm">
                         <p className="font-medium text-foreground">{p.full_name || p.email}{!p.active ? " (inativo)" : ""}</p>
+                        {ocupado ? <p className="text-xs font-medium text-destructive">Este membro já está escalado para outro ministério neste evento.</p> : null}
                         <p className={st === "Disponível" ? "text-success" : st === "Indisponível" ? "text-destructive" : "text-muted-foreground"}>{st}</p>
                         {c ? (
                           <p className="text-xs text-muted-foreground">
@@ -221,6 +246,9 @@ export function EditorEscala({
               </div>
 
               {erro ? <p className="text-sm text-destructive">{erro}</p> : null}
+              {podeExcluir ? (
+                <Button variant="ghost" className="w-full text-destructive" onClick={() => void excluir()} disabled={salvando}>Excluir escala</Button>
+              ) : null}
               <div className="grid gap-2 sm:grid-cols-3">
                 <Button variant="ghost" onClick={onFechar}>Cancelar</Button>
                 <Button variant="outline" onClick={() => void salvar(false)} disabled={salvando}>Salvar rascunho</Button>
