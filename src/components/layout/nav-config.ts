@@ -3,6 +3,7 @@ import {
   CalendarCheck,
   Church,
   Home,
+  LayoutDashboard,
   Settings2,
   User,
   Users,
@@ -28,11 +29,12 @@ const servosItem: ItemNav = { rotulo: "Servos", to: "/app/servos", icone: Users 
 const ministerios: ItemNav = { rotulo: "Ministérios", to: "/app/ministerios", icone: Church };
 const eventos: ItemNav = { rotulo: "Eventos", to: "/app/eventos", icone: CalendarDays };
 const perfilItem: ItemNav = { rotulo: "Perfil", to: "/app/perfil", icone: User };
+const painel: ItemNav = { rotulo: "Painel", to: "/app/painel", icone: LayoutDashboard };
 const admin: ItemNav = { rotulo: "Administração", to: "/app/admin", icone: Settings2 };
 
 export const navPorPerfil: Record<Perfil, ItemNav[]> = {
   servo: [inicio, escalas, disponibilidade, ministerios, perfilItem],
   lider: [inicio, escalas, ministerios, disponibilidade, servosItem, perfilItem],
   pastor: [inicio, escalas, ministerios, servosItem, eventos, disponibilidade, perfilItem],
-  admin: [inicio, escalas, servosItem, ministerios, eventos, admin, perfilItem],
+  admin: [painel, escalas, servosItem, ministerios, eventos, admin, perfilItem],
 };

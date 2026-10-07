@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarCheck, ChevronRight } from "lucide-react";
 
@@ -23,7 +23,7 @@ export const Route = createFileRoute("/app/inicio")({
 });
 
 function InicioPage() {
-  const { usuario } = useSessao();
+  const { usuario, perfil } = useSessao();
   const d = useDados();
   const hoje = hojeIso();
   const primeiroNome = usuario.nome.split(" ")[0];
@@ -41,6 +41,8 @@ function InicioPage() {
   });
   const mes = hoje.slice(0, 7);
   const dispMes = (disp.data ?? []).filter((x) => x.date.startsWith(mes));
+
+  if (perfil === "admin") return <Navigate to="/app/painel" replace />;
 
   return (
     <AppShell titulo={`Olá, ${primeiroNome}`} descricao="Acompanhe o que vem por aí">

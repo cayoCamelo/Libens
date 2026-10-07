@@ -16,7 +16,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { listarDisponibilidade } from "@/lib/dados";
 import { useSessao } from "@/lib/perfil-context";
-import { useDados } from "@/lib/use-dados";
+import { hojeIso, useDados } from "@/lib/use-dados";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/disponibilidade")({
@@ -128,6 +128,59 @@ function DisponibilidadePage() {
           </div>
         </CardContent>
       </Card>
+      {consultaveis.length > 0 ? <DisponibilidadeEquipe /> : null}
     </AppShell>
+  );
+}
+
+function DisponibilidadeEquipe() {
+  const d = useDados();
+  const hoje = hojeIso();
+  const proximos = d.eventos.filter((e) => e.date >= hoje).slice(0, 4);
+  const mins = d.global ? d.ministerios : d.ministerios.filter((m) => d.lidero.has(m.id));
+  const ids = [...new Set(d.membros.filter((m) => mins.some((x) => x.id === m.ministry_id)).map((m) => m.user_id))];
+  const q = useQuery({
+    queryKey: ["libens", "disp-equipe", ids.join(",")],
+    queryFn: () => listarDisponibilidade(ids),
+    enabled: ids.length > 0,
+  });
+  const st = (uid: string, data: string) => {
+    const r = q.data?.find((x) => x.user_id === uid && x.date === data);
+    return r === undefined ? "Não informado" : r.available ? "Disponível" : "Indisponível";
+  };
+  const curto = (iso: string) => {
+    const [a, m, dd] = iso.split("-").map(Number);
+    return `${new Date(a!, m! - 1, dd!).toLocaleDateString("pt-BR", { weekday: "short" })} ${String(dd).padStart(2, "0")}/${String(m).padStart(2, "0")}`;
+  };
+  return (
+    <section className="mt-6 space-y-3">
+      <h2 className="text-sm font-semibold text-muted-foreground">Disponibilidade da equipe (somente leitura)</h2>
+      {proximos.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum evento futuro.</p> : null}
+      {mins.map((m) => {
+        const membros = d.membros.filter((x) => x.ministry_id === m.id);
+        if (membros.length === 0 || proximos.length === 0) return null;
+        return (
+          <Card key={m.id}>
+            <CardContent className="space-y-3 p-4">
+              <p className="font-semibold text-foreground">{m.name}</p>
+              {membros.map((x) => (
+                <div key={x.id} className="space-y-1">
+                  <p className="text-sm font-medium text-foreground">{d.nomePessoa(x.user_id)}</p>
+                  {proximos.map((e) => {
+                    const v = st(x.user_id, e.date);
+                    return (
+                      <p key={e.id} className="flex justify-between gap-2 pl-3 text-xs">
+                        <span className="capitalize text-muted-foreground">{curto(e.date)} · {e.name}</span>
+                        <span className={v === "Disponível" ? "text-success" : v === "Indisponível" ? "text-destructive" : "text-muted-foreground"}>{v}</span>
+                      </p>
+                    );
+                  })}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        );
+      })}
+    </section>
   );
 }
