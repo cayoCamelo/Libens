@@ -22,6 +22,7 @@ import { Route as AppEscalasRouteImport } from './routes/app.escalas'
 import { Route as AppEventosRouteImport } from './routes/app.eventos'
 import { Route as AppInicioRouteImport } from './routes/app.inicio'
 import { Route as AppMinisteriosRouteImport } from './routes/app.ministerios'
+import { Route as AppPainelRouteImport } from './routes/app.painel'
 import { Route as AppPerfilRouteImport } from './routes/app.perfil'
 import { Route as AppServosRouteImport } from './routes/app.servos'
 import { Route as AppMinisteriosIdRouteImport } from './routes/app.ministerios_.$id'
@@ -92,6 +93,11 @@ const AppMinisteriosRoute = AppMinisteriosRouteImport.update({
   path: '/ministerios',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPainelRoute = AppPainelRouteImport.update({
+  id: '/painel',
+  path: '/painel',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppPerfilRoute = AppPerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
@@ -126,6 +132,7 @@ export interface FileRoutesByFullPath {
   '/app/eventos': typeof AppEventosRoute
   '/app/inicio': typeof AppInicioRoute
   '/app/ministerios': typeof AppMinisteriosRoute
+  '/app/painel': typeof AppPainelRoute
   '/app/perfil': typeof AppPerfilRoute
   '/app/servos': typeof AppServosRoute
   '/app/': typeof AppIndexRoute
@@ -144,6 +151,7 @@ export interface FileRoutesByTo {
   '/app/eventos': typeof AppEventosRoute
   '/app/inicio': typeof AppInicioRoute
   '/app/ministerios': typeof AppMinisteriosRoute
+  '/app/painel': typeof AppPainelRoute
   '/app/perfil': typeof AppPerfilRoute
   '/app/servos': typeof AppServosRoute
   '/app': typeof AppIndexRoute
@@ -164,6 +172,7 @@ export interface FileRoutesById {
   '/app/eventos': typeof AppEventosRoute
   '/app/inicio': typeof AppInicioRoute
   '/app/ministerios': typeof AppMinisteriosRoute
+  '/app/painel': typeof AppPainelRoute
   '/app/perfil': typeof AppPerfilRoute
   '/app/servos': typeof AppServosRoute
   '/app/': typeof AppIndexRoute
@@ -185,6 +194,7 @@ export interface FileRouteTypes {
     | '/app/eventos'
     | '/app/inicio'
     | '/app/ministerios'
+    | '/app/painel'
     | '/app/perfil'
     | '/app/servos'
     | '/app/'
@@ -203,6 +213,7 @@ export interface FileRouteTypes {
     | '/app/eventos'
     | '/app/inicio'
     | '/app/ministerios'
+    | '/app/painel'
     | '/app/perfil'
     | '/app/servos'
     | '/app'
@@ -222,6 +233,7 @@ export interface FileRouteTypes {
     | '/app/eventos'
     | '/app/inicio'
     | '/app/ministerios'
+    | '/app/painel'
     | '/app/perfil'
     | '/app/servos'
     | '/app/'
@@ -331,6 +343,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMinisteriosRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/painel': {
+      id: '/app/painel'
+      path: '/painel'
+      fullPath: '/app/painel'
+      preLoaderRoute: typeof AppPainelRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/perfil': {
       id: '/app/perfil'
       path: '/perfil'
@@ -369,6 +388,7 @@ interface AppRouteChildren {
   AppEventosRoute: typeof AppEventosRoute
   AppInicioRoute: typeof AppInicioRoute
   AppMinisteriosRoute: typeof AppMinisteriosRoute
+  AppPainelRoute: typeof AppPainelRoute
   AppPerfilRoute: typeof AppPerfilRoute
   AppServosRoute: typeof AppServosRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -383,6 +403,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppEventosRoute: AppEventosRoute,
   AppInicioRoute: AppInicioRoute,
   AppMinisteriosRoute: AppMinisteriosRoute,
+  AppPainelRoute: AppPainelRoute,
   AppPerfilRoute: AppPerfilRoute,
   AppServosRoute: AppServosRoute,
   AppIndexRoute: AppIndexRoute,
