@@ -128,6 +128,7 @@ export type Database = {
         Row: {
           active: boolean
           created_at: string
+          created_by: string | null
           date: string
           description: string | null
           end_time: string | null
@@ -141,6 +142,7 @@ export type Database = {
         Insert: {
           active?: boolean
           created_at?: string
+          created_by?: string | null
           date: string
           description?: string | null
           end_time?: string | null
@@ -154,6 +156,7 @@ export type Database = {
         Update: {
           active?: boolean
           created_at?: string
+          created_by?: string | null
           date?: string
           description?: string | null
           end_time?: string | null
@@ -165,6 +168,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "events_template_id_fkey"
             columns: ["template_id"]
@@ -240,7 +250,9 @@ export type Database = {
       notifications: {
         Row: {
           body: string | null
+          channel: string
           created_at: string
+          event_id: string | null
           id: string
           read_at: string | null
           schedule_id: string | null
@@ -250,7 +262,9 @@ export type Database = {
         }
         Insert: {
           body?: string | null
+          channel?: string
           created_at?: string
+          event_id?: string | null
           id?: string
           read_at?: string | null
           schedule_id?: string | null
@@ -260,7 +274,9 @@ export type Database = {
         }
         Update: {
           body?: string | null
+          channel?: string
           created_at?: string
+          event_id?: string | null
           id?: string
           read_at?: string | null
           schedule_id?: string | null
@@ -269,6 +285,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "notifications_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "notifications_schedule_id_fkey"
             columns: ["schedule_id"]
@@ -288,33 +311,45 @@ export type Database = {
       profiles: {
         Row: {
           active: boolean
+          avatar_url: string | null
+          bio: string | null
           created_at: string
           email: string
           full_name: string
           id: string
           phone: string | null
+          reminders_enabled: boolean
           role: Database["public"]["Enums"]["app_role"]
           updated_at: string
+          whatsapp: string | null
         }
         Insert: {
           active?: boolean
+          avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           email?: string
           full_name?: string
           id: string
           phone?: string | null
+          reminders_enabled?: boolean
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
+          whatsapp?: string | null
         }
         Update: {
           active?: boolean
+          avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           email?: string
           full_name?: string
           id?: string
           phone?: string | null
+          reminders_enabled?: boolean
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
+          whatsapp?: string | null
         }
         Relationships: []
       }
@@ -457,6 +492,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin_or_pastor: { Args: { _uid: string }; Returns: boolean }
+      is_any_leader: { Args: { _uid: string }; Returns: boolean }
       is_ministry_leader: {
         Args: { _mid: string; _uid: string }
         Returns: boolean
@@ -469,6 +505,8 @@ export type Database = {
         Args: { _leader: string; _member: string }
         Returns: boolean
       }
+      process_schedule_reminders: { Args: never; Returns: number }
+      profile_whatsapp: { Args: { _uid: string }; Returns: string }
       shares_ministry: { Args: { _a: string; _b: string }; Returns: boolean }
     }
     Enums: {

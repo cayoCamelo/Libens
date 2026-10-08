@@ -29,6 +29,13 @@
       "when": 1791254394158,
       "tag": "0003_eventos_padrao_escalas_lider",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791423622537,
+      "tag": "0004_lider_eventos_lembretes_perfil",
+      "breakpoints": true
     }
   ]
 }
