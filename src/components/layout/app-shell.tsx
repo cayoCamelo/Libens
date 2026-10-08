@@ -4,6 +4,8 @@ import { useEffect, useState, type ReactNode } from "react";
 import { LibensLogo } from "@/components/libens-logo";
 import { LogOut, Moon, Sun } from "lucide-react";
 import { navPorPerfil } from "@/components/layout/nav-config";
+import { SinoNotificacoes } from "@/components/sino-notificacoes";
+import { useAvatarUrl, useMeuPerfilExtra } from "@/lib/avatar";
 import { useSessao } from "@/lib/perfil-context";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +22,8 @@ export function AppShell({
   const itens = navPorPerfil[perfil];
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [modoEscuro, setModoEscuro] = useState(false);
+  const extra = useMeuPerfilExtra(usuario.id);
+  const foto = useAvatarUrl(extra.data?.avatar_url);
 
   useEffect(() => {
     const escuro = localStorage.getItem("libens-tema") === "escuro";
@@ -90,6 +94,7 @@ export function AppShell({
               ) : null}
             </div>
             <div className="flex shrink-0 items-center gap-2">
+              <SinoNotificacoes />
               <button
                 type="button"
                 onClick={alternarTema}
@@ -107,9 +112,9 @@ export function AppShell({
               >
                 <LogOut className="h-4.5 w-4.5" />
               </button>
-              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-secondary text-sm font-semibold text-secondary-foreground">
-                {usuario.nome.charAt(0).toUpperCase()}
-              </div>
+              <Link to="/app/perfil" aria-label="Meu perfil" className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-secondary text-sm font-semibold text-secondary-foreground">
+                {foto ? <img src={foto} alt="" className="h-full w-full object-cover" /> : usuario.nome.charAt(0).toUpperCase()}
+              </Link>
             </div>
           </div>
         </header>
