@@ -49,10 +49,9 @@ function EventosPage() {
   const excluir = async () => {
     if (!excluindo || !podeEditar(excluindo)) return;
     setSalvando(true);
-    // Arquiva em vez de apagar: preserva escalas e histórico vinculados.
-    const { error } = await supabase.from("events").update({ active: false }).eq("id", excluindo.id).select("id").single();
+    const { error } = await supabase.from("events").delete().eq("id", excluindo.id).select("id").single();
     setSalvando(false);
-    if (error) return setAviso(traduzirErroDb(error));
+    if (error) return setAviso(error.code === "23503" ? "Este evento possui escalas ou registros vinculados. Remova os vínculos antes de excluir." : traduzirErroDb(error));
     setExcluindo(null); await d.recarregar();
   };
   const [form, setForm] = useState<Form | null>(null);
@@ -169,7 +168,7 @@ function EventosPage() {
 
       <Dialog open={!!excluindo} onOpenChange={(o)=>!o&&!salvando&&setExcluindo(null)}>
         <DialogContent><DialogHeader><DialogTitle>Excluir evento?</DialogTitle></DialogHeader>
-          <p className="text-sm text-muted-foreground">{excluindo?.name} será retirado da programação. As escalas e o histórico serão preservados.</p>
+          <p className="text-sm text-muted-foreground">Excluir {excluindo?.name}? Se houver escalas vinculadas, a exclusão será bloqueada para preservar o histórico.</p>
           {aviso ? <p className="text-sm text-destructive">{aviso}</p>:null}
           <div className="flex gap-2"><Button variant="secondary" disabled={salvando} onClick={()=>setExcluindo(null)}>Cancelar</Button><Button variant="destructive" disabled={salvando} onClick={()=>void excluir()}>Confirmar exclusão</Button></div>
         </DialogContent>
