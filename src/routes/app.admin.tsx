@@ -22,6 +22,8 @@ import type { Perfil } from "@/types/libens";
 export const Route = createFileRoute("/app/admin")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Administração — Libens" },
       { name: "description", content: "Gerencie usuários e funções do Libens." },
       { property: "og:title", content: "Administração — Libens" },

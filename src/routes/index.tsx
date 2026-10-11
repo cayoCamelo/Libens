@@ -3,6 +3,8 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Libens — Escalas e ministérios da sua igreja" },
       { name: "description", content: "Acesse o Libens para acompanhar escalas e ministérios." },
       { property: "og:title", content: "Libens — Escalas e ministérios da sua igreja" },

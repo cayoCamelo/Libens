@@ -11,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/cadastro")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Criar conta — Libens" },
       { name: "description", content: "Crie sua conta no Libens para servir nos ministérios." },
       { property: "og:title", content: "Criar conta — Libens" },

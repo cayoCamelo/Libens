@@ -17,6 +17,8 @@ import { useDados } from "@/lib/use-dados";
 export const Route = createFileRoute("/app/servos_/$id")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Detalhes do servo — Libens" },
       { name: "description", content: "Dados, função e ministérios de um servo." },
       { property: "og:title", content: "Detalhes do servo — Libens" },

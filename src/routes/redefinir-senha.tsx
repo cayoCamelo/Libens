@@ -10,6 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/redefinir-senha")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Nova senha — Libens" },
       { name: "description", content: "Defina uma nova senha para sua conta do Libens." },
       { property: "og:title", content: "Nova senha — Libens" },

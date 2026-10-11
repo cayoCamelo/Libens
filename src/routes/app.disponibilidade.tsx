@@ -22,6 +22,8 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/app/disponibilidade")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Disponibilidade — Libens" },
       { name: "description", content: "Informe os dias em que você pode servir." },
       { property: "og:title", content: "Disponibilidade — Libens" },

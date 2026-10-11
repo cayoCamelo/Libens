@@ -9,7 +9,9 @@ export function useAvatarUrl(caminho: string | null | undefined) {
     enabled: !!caminho,
     staleTime: 50 * 60 * 1000,
     queryFn: async () => {
-      const { data } = await supabase.storage.from("avatars").createSignedUrl(caminho!, 3600);
+      if (!caminho) return null;
+      const { data, error } = await supabase.storage.from("avatars").createSignedUrl(caminho, 3600);
+      if (error) throw new Error(error.message);
       return data?.signedUrl ?? null;
     },
   });
@@ -25,6 +27,7 @@ export function useMeuPerfilExtra(userId: string) {
         supabase.from("profiles").select("avatar_url, bio, reminders_enabled").eq("id", userId).maybeSingle(),
         supabase.rpc("profile_whatsapp", { _uid: userId }),
       ]);
+      if (p.error || w.error) throw new Error(p.error?.message ?? w.error?.message ?? "Não foi possível carregar seu perfil.");
       return {
         avatar_url: p.data?.avatar_url ?? null,
         bio: p.data?.bio ?? "",

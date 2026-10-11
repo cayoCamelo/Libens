@@ -16,6 +16,8 @@ import { useDados } from "@/lib/use-dados";
 export const Route = createFileRoute("/app/ministerios")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Ministérios — Libens" },
       { name: "description", content: "Ministérios, membros e líderes." },
       { property: "og:title", content: "Ministérios — Libens" },
@@ -35,9 +37,7 @@ function MinisteriosPage() {
 
   const visiveis = d.global
     ? d.ministerios
-    : d.lidero.size > 0
-      ? d.ministerios.filter((m) => d.lidero.has(m.id))
-      : d.ministerios.filter((m) => d.participo.has(m.id));
+    : d.ministerios.filter((m) => d.lidero.has(m.id) || d.participo.has(m.id));
   const criar = async () => {
     setErro(null);
     if (!nome.trim()) return setErro("Informe o nome.");
@@ -82,6 +82,7 @@ function MinisteriosPage() {
                       <ChevronRight className="h-4 w-4 text-muted-foreground" />
                     </div>
                   </div>
+                  {d.participo.has(m.id) ? <p className="text-xs text-muted-foreground">Você participa deste ministério.</p> : null}
                   {m.description ? <p className="text-sm text-muted-foreground">{m.description}</p> : null}
                   <div className="flex flex-wrap gap-1.5">
                     {lideres.length === 0 ? <span className="text-xs text-muted-foreground">Sem líder</span> : null}

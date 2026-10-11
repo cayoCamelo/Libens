@@ -37,6 +37,8 @@ import { hojeIso, useDados } from "@/lib/use-dados";
 export const Route = createFileRoute("/app/ministerios_/$id")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Ministério — Libens" },
       { name: "description", content: "Visão geral, membros, líderes e próximas escalas do ministério." },
       { property: "og:title", content: "Ministério — Libens" },
