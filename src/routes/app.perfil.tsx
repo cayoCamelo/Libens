@@ -57,6 +57,7 @@ function PerfilPage() {
 
   const salvar = async () => {
     setMsg(null);
+    if (!nome.trim()) return setMsg({ erro: true, t: "Informe seu nome." });
     const digitos = whats.replace(/\D/g, "");
     if (digitos && (digitos.length < 10 || digitos.length > 13))
       return setMsg({ erro: true, t: "WhatsApp inválido. Use DDD + número, ex.: (85) 99999-9999." });
@@ -75,9 +76,10 @@ function PerfilPage() {
     if (f.size > MAX) return setMsg({ erro: true, t: "A foto deve ter no máximo 2 MB." });
     const valida = await new Promise<boolean>((res) => {
       const img = new Image();
-      img.onload = () => res(img.width > 0);
-      img.onerror = () => res(false);
-      img.src = URL.createObjectURL(f);
+      const url = URL.createObjectURL(f);
+      img.onload = () => { URL.revokeObjectURL(url); res(img.width > 0); };
+      img.onerror = () => { URL.revokeObjectURL(url); res(false); };
+      img.src = url;
     });
     if (!valida) return setMsg({ erro: true, t: "Arquivo de imagem inválido." });
     setEnviando(true);
@@ -86,7 +88,8 @@ function PerfilPage() {
     const up = await supabase.storage.from("avatars").upload(caminho, f, { contentType: f.type });
     if (up.error) { setEnviando(false); return setMsg({ erro: true, t: up.error.message }); }
     const antiga = extra.data?.avatar_url;
-    await supabase.from("profiles").update({ avatar_url: caminho }).eq("id", usuario.id);
+    const { error } = await supabase.from("profiles").update({ avatar_url: caminho }).eq("id", usuario.id);
+    if (error) { await supabase.storage.from("avatars").remove([caminho]); setEnviando(false); return setMsg({ erro: true, t: error.message }); }
     if (antiga) await supabase.storage.from("avatars").remove([antiga]);
     setEnviando(false);
     await atualizarExtra();
@@ -95,13 +98,15 @@ function PerfilPage() {
   const removerFoto = async () => {
     const antiga = extra.data?.avatar_url;
     if (!antiga) return;
-    await supabase.from("profiles").update({ avatar_url: null }).eq("id", usuario.id);
+    const { error } = await supabase.from("profiles").update({ avatar_url: null }).eq("id", usuario.id);
+    if (error) return setMsg({ erro: true, t: error.message });
     await supabase.storage.from("avatars").remove([antiga]);
     await atualizarExtra();
   };
 
   const alternarLembretes = async (v: boolean) => {
-    await supabase.from("profiles").update({ reminders_enabled: v }).eq("id", usuario.id);
+    const { error } = await supabase.from("profiles").update({ reminders_enabled: v }).eq("id", usuario.id);
+    if (error) return setMsg({ erro: true, t: error.message });
     await atualizarExtra();
   };
 

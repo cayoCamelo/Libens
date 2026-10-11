@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarPlus, Plus } from "lucide-react";
+import { CalendarPlus, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { AppShell } from "@/components/layout/app-shell";
@@ -11,9 +11,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatarData } from "@/data/mock";
 import { supabase } from "@/integrations/supabase/client";
-import { hora, listarModelos, type EventoDb } from "@/lib/dados";
+import { hora, listarModelos, traduzirErroDb, type EventoDb } from "@/lib/dados";
 
 const diasSemana = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
+import { useSessao } from "@/lib/perfil-context";
 import { useDados } from "@/lib/use-dados";
 
 export const Route = createFileRoute("/app/eventos")({
@@ -41,6 +42,19 @@ interface Form {
 
 function EventosPage() {
   const d = useDados();
+  const { usuario } = useSessao();
+  const podeCriar = d.global || d.lidero.size > 0;
+  const podeEditar = (e: EventoDb) => d.global || (d.lidero.size > 0 && e.created_by === usuario.id);
+  const [excluindo, setExcluindo] = useState<EventoDb | null>(null);
+  const excluir = async () => {
+    if (!excluindo || !podeEditar(excluindo)) return;
+    setSalvando(true);
+    // Arquiva em vez de apagar: preserva escalas e histórico vinculados.
+    const { error } = await supabase.from("events").update({ active: false }).eq("id", excluindo.id).select("id").single();
+    setSalvando(false);
+    if (error) return setAviso(traduzirErroDb(error));
+    setExcluindo(null); await d.recarregar();
+  };
   const [form, setForm] = useState<Form | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
@@ -66,8 +80,9 @@ function EventosPage() {
   };
 
   const salvar = async () => {
-    if (!form) return;
+    if (!form || !podeCriar) return;
     if (!form.name.trim() || !form.date || !form.start_time) return setErro("Informe nome, data e horário de início.");
+    if (form.end_time && form.end_time <= form.start_time) return setErro("O término deve ser após o início.");
     setSalvando(true);
     setErro(null);
     const dados = {
@@ -76,7 +91,7 @@ function EventosPage() {
     };
     const r = form.id
       ? await supabase.from("events").update(dados).eq("id", form.id).select("id").single()
-      : await supabase.from("events").insert(dados).select("id").single();
+      : await supabase.from("events").insert({ ...dados, created_by: usuario.id }).select("id").single();
     if (r.error || !r.data) {
       setSalvando(false);
       return setErro(r.error?.message ?? "Erro ao salvar");
@@ -86,9 +101,12 @@ function EventosPage() {
     const zerados = Object.entries(form.needs).filter(([, n]) => n <= 0).map(([id]) => id);
     if (linhas.length) {
       const { error } = await supabase.from("event_ministry_needs").upsert(linhas, { onConflict: "event_id,ministry_id" });
-      if (error) setErro(error.message);
+      if (error) { setSalvando(false); await d.recarregar(); return setErro(traduzirErroDb(error)); }
     }
-    if (zerados.length) await supabase.from("event_ministry_needs").delete().eq("event_id", eventId).in("ministry_id", zerados);
+    if (zerados.length) {
+      const { error } = await supabase.from("event_ministry_needs").delete().eq("event_id", eventId).in("ministry_id", zerados);
+      if(error) {setSalvando(false); await d.recarregar();return setErro(traduzirErroDb(error));}
+    }
     setSalvando(false);
     await d.recarregar();
     setForm(null);
@@ -112,11 +130,11 @@ function EventosPage() {
               {t.name} · toda {diasSemana[t.weekday]} · {hora(t.start_time)}{t.end_time ? `–${hora(t.end_time)}` : ""}
             </p>
           ))}
-          {d.global ? (
+          {podeCriar ? (
             <div className="flex flex-wrap gap-2 pt-1">
-              <Button size="sm" variant="secondary" onClick={() => void gerarProximos()}>
+              {d.global ? <Button size="sm" variant="secondary" onClick={() => void gerarProximos()}>
                 <CalendarPlus className="h-4 w-4" /> Gerar próximos eventos
-              </Button>
+              </Button> : null}
               <Button size="sm" onClick={() => abrir()}>
                 <Plus className="h-4 w-4" /> Novo evento
               </Button>
@@ -129,12 +147,13 @@ function EventosPage() {
         {d.eventos.map((e) => {
           const needs = d.necessidades.filter((n) => n.event_id === e.id);
           return (
-            <Card key={e.id} className={d.global ? "cursor-pointer" : ""} onClick={() => d.global && abrir(e)}>
+            <Card key={e.id}>
               <CardContent className="space-y-1 p-4">
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {formatarData(e.date)} · {hora(e.start_time)}{e.end_time ? `–${hora(e.end_time)}` : ""}
                 </p>
                 <p className="font-semibold text-foreground">{e.name}</p>
+                {podeEditar(e) ? <div className="flex gap-2"><Button size="sm" variant="ghost" onClick={()=>abrir(e)}><Pencil className="h-4 w-4" /> Editar</Button><Button size="sm" variant="ghost" onClick={()=>{setAviso(null);setExcluindo(e);}}><Trash2 className="h-4 w-4" /> Excluir</Button></div>:null}
                 {e.location ? <p className="text-sm text-muted-foreground">{e.location}</p> : null}
                 {needs.length ? (
                   <p className="text-xs text-muted-foreground">
@@ -148,6 +167,13 @@ function EventosPage() {
         {!d.carregando && d.eventos.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum evento cadastrado.</p> : null}
       </div>
 
+      <Dialog open={!!excluindo} onOpenChange={(o)=>!o&&!salvando&&setExcluindo(null)}>
+        <DialogContent><DialogHeader><DialogTitle>Excluir evento?</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">{excluindo?.name} será retirado da programação. As escalas e o histórico serão preservados.</p>
+          {aviso ? <p className="text-sm text-destructive">{aviso}</p>:null}
+          <div className="flex gap-2"><Button variant="secondary" disabled={salvando} onClick={()=>setExcluindo(null)}>Cancelar</Button><Button variant="destructive" disabled={salvando} onClick={()=>void excluir()}>Confirmar exclusão</Button></div>
+        </DialogContent>
+      </Dialog>
       <Dialog open={!!form} onOpenChange={(o) => !o && setForm(null)}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -165,7 +191,7 @@ function EventosPage() {
               {campo("description", "Descrição")}
               <div className="space-y-2">
                 <p className="text-sm font-medium text-foreground">Pessoas necessárias por ministério (opcional, 0 = livre)</p>
-                {d.ministerios.map((m) => (
+                {d.ministerios.filter((m)=>d.podeGerenciar(m.id)).map((m) => (
                   <div key={m.id} className="flex items-center justify-between gap-3">
                     <span className="text-sm text-foreground">{m.name}</span>
                     <Input

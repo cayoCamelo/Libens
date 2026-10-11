@@ -32,7 +32,7 @@ export function traduzirErroDb(e: { message: string; code?: string } | null) {
 }
 export interface EventoDb {
   id: string; name: string; description: string | null; date: string;
-  start_time: string; end_time: string | null; location: string | null; active: boolean;
+  start_time: string; end_time: string | null; location: string | null; active: boolean; created_by: string | null;
 }
 export interface EscalaDb {
   id: string; event_id: string; ministry_id: string; user_id: string; status: string; created_at: string;
