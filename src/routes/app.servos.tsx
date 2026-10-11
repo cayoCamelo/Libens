@@ -15,6 +15,8 @@ import type { Perfil } from "@/types/libens";
 export const Route = createFileRoute("/app/servos")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Servos — Libens" },
       { name: "description", content: "Pesquise e gerencie os servos e seus ministérios." },
       { property: "og:title", content: "Servos — Libens" },

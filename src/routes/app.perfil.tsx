@@ -20,6 +20,8 @@ import { useDados } from "@/lib/use-dados";
 export const Route = createFileRoute("/app/perfil")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Perfil — Libens" },
       { name: "description", content: "Sua foto, seus dados, ministérios e lembretes no Libens." },
       { property: "og:title", content: "Perfil — Libens" },

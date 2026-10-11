@@ -18,6 +18,8 @@ export const Route = createFileRoute("/app/escalas")({
   validateSearch: (s) => z.object({ evento: z.string().optional(), ministerio: z.string().optional() }).parse(s),
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Escalas — Libens" },
       { name: "description", content: "Escalas dos ministérios para cada evento." },
       { property: "og:title", content: "Escalas — Libens" },

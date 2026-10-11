@@ -20,6 +20,8 @@ import { useDados } from "@/lib/use-dados";
 export const Route = createFileRoute("/app/eventos")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Eventos — Libens" },
       { name: "description", content: "Cultos e eventos programados." },
       { property: "og:title", content: "Eventos — Libens" },

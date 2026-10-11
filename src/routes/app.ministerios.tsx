@@ -16,6 +16,8 @@ import { useDados } from "@/lib/use-dados";
 export const Route = createFileRoute("/app/ministerios")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Ministérios — Libens" },
       { name: "description", content: "Ministérios, membros e líderes." },
       { property: "og:title", content: "Ministérios — Libens" },

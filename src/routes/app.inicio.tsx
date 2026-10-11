@@ -14,6 +14,8 @@ import { hojeIso, useDados } from "@/lib/use-dados";
 export const Route = createFileRoute("/app/inicio")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Início — Libens" },
       { name: "description", content: "Sua próxima escala e a sua disponibilidade no Libens." },
       { property: "og:title", content: "Início — Libens" },
