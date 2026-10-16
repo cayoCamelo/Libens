@@ -43,6 +43,13 @@
       "when": 1791423656108,
       "tag": "0005_enable_pg_cron",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792182836055,
+      "tag": "0006_confirmacoes_trocas_status_eventos",
+      "breakpoints": true
     }
   ]
 }

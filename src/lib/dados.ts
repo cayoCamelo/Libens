@@ -26,17 +26,18 @@ export function traduzirErroDb(e: { message: string; code?: string } | null) {
   if (!e) return null;
   if (e.message.includes("schedules_user_event_unique")) return "Este membro já está escalado para outro ministério neste evento.";
   if (e.code === "P0001") return e.message;
+  if (e.message.includes("substitution_open_unique")) return "Já existe um pedido de troca em andamento para esta escala.";
   if (e.code === "23505") return "Esse vínculo já existe.";
   if (e.code === "42501" || /row-level security/i.test(e.message)) return "Você não tem permissão para essa ação.";
   return e.message;
 }
 export interface EventoDb {
   id: string; name: string; description: string | null; date: string;
-  start_time: string; end_time: string | null; location: string | null; active: boolean; created_by: string | null;
+  start_time: string; end_time: string | null; location: string | null; active: boolean; created_by: string | null; status: string;
 }
 export interface EscalaDb {
   id: string; event_id: string; ministry_id: string; user_id: string; status: string; created_at: string;
-  created_by: string | null; updated_by: string | null; updated_at: string;
+  created_by: string | null; updated_by: string | null; updated_at: string; response: string;
 }
 export interface NecessidadeDb { id: string; event_id: string; ministry_id: string; required_count: number }
 
@@ -86,13 +87,13 @@ export async function listarEscalas() {
   return ok<EscalaDb[]>(
     await supabase
       .from("schedules")
-      .select("id, event_id, ministry_id, user_id, status, created_at, created_by, updated_by, updated_at")
+      .select("id, event_id, ministry_id, user_id, status, created_at, created_by, updated_by, updated_at, response")
       .not("status", "in", "(cancelled,replaced)"),
   );
 }
 export async function listarTodasEscalas() {
   return ok<EscalaDb[]>(
-    await supabase.from("schedules").select("id, event_id, ministry_id, user_id, status, created_at, created_by, updated_by, updated_at"),
+    await supabase.from("schedules").select("id, event_id, ministry_id, user_id, status, created_at, created_by, updated_by, updated_at, response"),
   );
 }
 export async function listarDisponibilidade(userIds?: string[]) {
@@ -114,4 +115,22 @@ export async function listarModelos() {
   return ok<ModeloEventoDb[]>(
     await supabase.from("event_templates").select("id, name, weekday, start_time, end_time, active").order("weekday", { ascending: false }),
   );
+}
+
+export const rotuloResposta: Record<string, string> = { pending: "Aguardando resposta", confirmed: "Confirmado", declined: "Recusado" };
+export const rotuloEventoStatus: Record<string, string> = { scheduled: "Agendado", in_progress: "Em andamento", completed: "Concluído", cancelled: "Cancelado" };
+export const rotuloTroca: Record<string, string> = {
+  pending_substitute: "Aguardando substituto", pending_leader: "Aguardando líder", approved: "Aprovada",
+  rejected: "Rejeitada", declined: "Recusada pelo substituto", cancelled: "Cancelada",
+};
+export interface TrocaDb {
+  id: string; schedule_id: string; event_id: string; ministry_id: string; requester_id: string; substitute_id: string;
+  status: string; reason: string | null; created_at: string; decided_by: string | null; decided_at: string | null;
+}
+export async function listarTrocas() {
+  return ok<TrocaDb[]>(await supabase.from("substitution_requests").select("*").order("created_at", { ascending: false }));
+}
+/** Evento aberto para confirmações/trocas (nem concluído nem cancelado). */
+export function eventoAberto(e: Pick<EventoDb, "status"> | undefined) {
+  return !!e && e.status !== "completed" && e.status !== "cancelled";
 }
