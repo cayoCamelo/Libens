@@ -136,6 +136,7 @@ export type Database = {
           location: string | null
           name: string
           start_time: string
+          status: string
           template_id: string | null
           updated_at: string
         }
@@ -150,6 +151,7 @@ export type Database = {
           location?: string | null
           name: string
           start_time: string
+          status?: string
           template_id?: string | null
           updated_at?: string
         }
@@ -164,6 +166,7 @@ export type Database = {
           location?: string | null
           name?: string
           start_time?: string
+          status?: string
           template_id?: string | null
           updated_at?: string
         }
@@ -362,6 +365,8 @@ export type Database = {
           ministry_id: string
           position: string | null
           replaces_schedule_id: string | null
+          responded_at: string | null
+          response: string
           status: string
           updated_at: string
           updated_by: string | null
@@ -375,6 +380,8 @@ export type Database = {
           ministry_id: string
           position?: string | null
           replaces_schedule_id?: string | null
+          responded_at?: string | null
+          response?: string
           status?: string
           updated_at?: string
           updated_by?: string | null
@@ -388,6 +395,8 @@ export type Database = {
           ministry_id?: string
           position?: string | null
           replaces_schedule_id?: string | null
+          responded_at?: string | null
+          response?: string
           status?: string
           updated_at?: string
           updated_by?: string | null
@@ -438,6 +447,107 @@ export type Database = {
           },
         ]
       }
+      substitution_requests: {
+        Row: {
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          event_id: string
+          id: string
+          ministry_id: string
+          new_schedule_id: string | null
+          reason: string | null
+          requester_id: string
+          schedule_id: string
+          status: string
+          substitute_id: string
+          substitute_responded_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          event_id: string
+          id?: string
+          ministry_id: string
+          new_schedule_id?: string | null
+          reason?: string | null
+          requester_id: string
+          schedule_id: string
+          status?: string
+          substitute_id: string
+          substitute_responded_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          event_id?: string
+          id?: string
+          ministry_id?: string
+          new_schedule_id?: string | null
+          reason?: string | null
+          requester_id?: string
+          schedule_id?: string
+          status?: string
+          substitute_id?: string
+          substitute_responded_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "substitution_requests_decided_by_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "substitution_requests_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "substitution_requests_ministry_id_fkey"
+            columns: ["ministry_id"]
+            isOneToOne: false
+            referencedRelation: "ministries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "substitution_requests_new_schedule_id_fkey"
+            columns: ["new_schedule_id"]
+            isOneToOne: false
+            referencedRelation: "schedules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "substitution_requests_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "substitution_requests_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "schedules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "substitution_requests_substitute_id_fkey"
+            columns: ["substitute_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_ministries: {
         Row: {
           created_at: string
@@ -479,9 +589,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _evento_aberto: { Args: { _eid: string }; Returns: undefined }
+      _notify: {
+        Args: {
+          _body: string
+          _eid: string
+          _sid: string
+          _title: string
+          _type: string
+          _uid: string
+        }
+        Returns: undefined
+      }
       can_manage_ministry: {
         Args: { _mid: string; _uid: string }
         Returns: boolean
+      }
+      cancel_substitution: { Args: { _rid: string }; Returns: undefined }
+      decide_substitution: {
+        Args: { _approve: boolean; _rid: string }
+        Returns: undefined
+      }
+      event_status_calc: {
+        Args: { _date: string; _end: string; _now?: string; _start: string }
+        Returns: string
       }
       generate_template_events: { Args: { _months?: number }; Returns: number }
       has_role: {
@@ -507,7 +638,31 @@ export type Database = {
       }
       process_schedule_reminders: { Args: never; Returns: number }
       profile_whatsapp: { Args: { _uid: string }; Returns: string }
+      refresh_event_statuses: { Args: never; Returns: number }
+      request_substitution: {
+        Args: { _reason?: string; _sid: string; _substitute: string }
+        Returns: string
+      }
+      respond_schedule: {
+        Args: { _response: string; _sid: string }
+        Returns: undefined
+      }
+      respond_substitution: {
+        Args: { _accept: boolean; _rid: string }
+        Returns: undefined
+      }
+      set_event_cancelled: {
+        Args: { _cancelled: boolean; _eid: string }
+        Returns: undefined
+      }
       shares_ministry: { Args: { _a: string; _b: string }; Returns: boolean }
+      substitute_candidates: {
+        Args: { _sid: string }
+        Returns: {
+          full_name: string
+          user_id: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "pastor" | "lider" | "servo"
