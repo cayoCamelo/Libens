@@ -8,6 +8,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useRef,
   type ReactNode,
 } from "react";
 
@@ -24,6 +25,7 @@ interface SessaoContextValue {
   perfil: Perfil;
   usuario: Servo;
   ativo: boolean;
+  erroPerfil: string | null;
   sair: () => Promise<void>;
   recarregarPerfil: () => Promise<void>;
 }
@@ -37,53 +39,70 @@ export function SessaoProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [session, setSession] = useState<Session | null>(null);
   const [usuario, setUsuario] = useState<Servo>(usuarioVazio);
-  const [ativo, setAtivo] = useState(true);
+  const [ativo, setAtivo] = useState(false);
+  const [erroPerfil, setErroPerfil] = useState<string | null>(null);
+  const carga = useRef(0);
+  const identidade = useRef<string | null>(null);
   const [carregando, setCarregando] = useState(true);
 
   const carregarPerfil = useCallback(async (s: Session | null) => {
+    const versao = ++carga.current;
+    setCarregando(true);
+    setErroPerfil(null);
+    setAtivo(false);
+    setUsuario(usuarioVazio);
     if (!s) {
-      setUsuario(usuarioVazio);
       setCarregando(false);
       return;
     }
-    const { data } = await supabase
-      .from("profiles")
-      .select("id, full_name, email, phone, role, active")
-      .eq("id", s.user.id)
-      .maybeSingle();
-    setUsuario({
-      id: s.user.id,
-      nome: data?.full_name || s.user.email?.split("@")[0] || "Usuário",
-      email: data?.email || s.user.email || "",
-      telefone: data?.phone ?? undefined,
-      perfil: (data?.role as Perfil) ?? "servo",
-      ministerioIds: [],
-    });
-    setAtivo(data?.active ?? true);
-    setCarregando(false);
+    try {
+      const { data, error } = await supabase
+        .rpc("list_people")
+        .eq("id", s.user.id)
+        .maybeSingle();
+      if (versao !== carga.current) return;
+      if (error) throw new Error("Não foi possível carregar seu perfil. Tente novamente.");
+      if (!data) throw new Error("Seu perfil não foi encontrado. Entre em contato com a administração.");
+      setUsuario({
+        id: data.id, nome: data.full_name || "Usuário", email: data.email,
+        telefone: data.phone ?? undefined, perfil: data.role as Perfil, ministerioIds: [],
+      });
+      setAtivo(data.active);
+    } catch (error) {
+      if (versao === carga.current) setErroPerfil(error instanceof Error ? error.message : "Falha ao carregar perfil.");
+    } finally {
+      if (versao === carga.current) setCarregando(false);
+    }
   }, []);
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
-      setSession(s);
-      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
-        setTimeout(() => {
-          void carregarPerfil(s);
-          router.invalidate();
-        }, 0);
+    let montado = true;
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
+      if (identidade.current !== (s?.user.id ?? null)) {
+        queryClient.clear();
+        identidade.current = s?.user.id ?? null;
       }
+      setAtivo(false);
+      setCarregando(true);
+      setUsuario(usuarioVazio);
+      setSession(s);
+      setTimeout(() => {
+        if (!montado) return;
+        void carregarPerfil(s);
+        router.invalidate();
+      }, 0);
     });
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      void carregarPerfil(data.session);
-    });
-    return () => sub.subscription.unsubscribe();
-  }, [carregarPerfil, router]);
+    return () => { montado = false; ++carga.current; sub.subscription.unsubscribe(); };
+  }, [carregarPerfil, router, queryClient]);
 
   const sair = useCallback(async () => {
     await queryClient.cancelQueries();
     queryClient.clear();
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      setErroPerfil("Não foi possível encerrar a sessão. Tente sair novamente.");
+      return;
+    }
     router.navigate({ to: "/login", replace: true });
   }, [queryClient, router]);
 
@@ -94,10 +113,11 @@ export function SessaoProvider({ children }: { children: ReactNode }) {
       perfil: usuario.perfil,
       usuario,
       ativo,
+      erroPerfil,
       sair,
       recarregarPerfil: () => carregarPerfil(session),
     }),
-    [carregando, session, usuario, ativo, sair, carregarPerfil],
+    [carregando, session, usuario, ativo, erroPerfil, sair, carregarPerfil],
   );
 
   return <SessaoContext.Provider value={value}>{children}</SessaoContext.Provider>;

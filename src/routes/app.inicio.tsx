@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { formatarData } from "@/data/mock";
 import { hora, listarDisponibilidade } from "@/lib/dados";
 import { useSessao } from "@/lib/perfil-context";
+import { eventoAindaAberto } from "@/lib/eventos";
 import { hojeIso, useDados } from "@/lib/use-dados";
 
 export const Route = createFileRoute("/app/inicio")({
@@ -36,7 +37,7 @@ function InicioPage() {
   const minhas = d.escalas
     .filter((s) => s.user_id === usuario.id && s.status !== "draft")
     .map((s) => ({ s, e: evento(s.event_id) }))
-    .filter((x) => x.e && x.e.date >= hoje)
+    .filter((x) => x.e && eventoAindaAberto(x.e))
     .sort((a, b) => `${a.e?.date ?? ""}${a.e?.start_time ?? ""}`.localeCompare(`${b.e?.date ?? ""}${b.e?.start_time ?? ""}`));
   const proxima = minhas[0];
   const disp = useQuery({
@@ -52,11 +53,9 @@ function InicioPage() {
   return (
     <AppShell titulo={`Olá, ${primeiroNome}`} descricao="Acompanhe o que vem por aí">
       <div className="space-y-7">
-        {!inicioSimplificado && d.lidero.size > 0 ? <div className="flex flex-wrap gap-4"><Link to="/app/escalas" className="text-sm font-medium text-primary">Gerenciar escalas</Link><Link to="/app/eventos" className="text-sm font-medium text-primary">Eventos</Link><Link to="/app/ministerios" className="text-sm font-medium text-primary">Meus ministérios</Link></div>:null}
         {(avisos.data ?? []).some((n)=>!n.read_at) ? <section className="space-y-2"><h2 className="text-sm font-semibold text-muted-foreground">Lembretes pendentes</h2>{(avisos.data ?? []).filter((n)=>!n.read_at).slice(0,3).map((n)=><p key={n.id} className="text-sm text-foreground">{n.title}</p>)}</section>:null}
         {!inicioSimplificado ? <section className="space-y-2"><h2 className="text-sm font-semibold text-muted-foreground">Meus ministérios</h2><div className="flex flex-wrap gap-2">{d.ministerios.filter((m)=>d.lidero.has(m.id)||d.participo.has(m.id)).map((m)=><Badge key={m.id} variant="secondary">{m.name}</Badge>)}</div></section> : null}
         {!inicioSimplificado ? <section className="space-y-2"><h2 className="text-sm font-semibold text-muted-foreground">Próximo evento</h2>{d.eventos.find((e)=>e.date>=hoje) ? (()=>{const e=d.eventos.find((e)=>e.date>=hoje);return e ? <p className="text-sm text-foreground">{e.name} · {formatarData(e.date)} · {hora(e.start_time)}</p>:null;})() : <p className="text-sm text-muted-foreground">Nenhum evento futuro.</p>}</section> : null}
-        {!inicioSimplificado && d.lidero.size > 0 ? <section className="space-y-2"><h2 className="text-sm font-semibold text-muted-foreground">Escalas que gerencio</h2>{d.eventos.filter((e)=>e.date>=hoje && d.escalas.some((s)=>s.event_id===e.id&&d.lidero.has(s.ministry_id))).slice(0,3).map((e)=><p key={e.id} className="text-sm text-foreground">{e.name} · {formatarData(e.date)}</p>)}</section>:null}
         <section className="space-y-3">
           <h2 className="text-sm font-semibold text-muted-foreground">Próxima escala</h2>
           {proxima?.e ? (

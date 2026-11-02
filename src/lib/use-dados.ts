@@ -10,12 +10,13 @@ import {
   listarNecessidades,
   listarPessoas,
 } from "@/lib/dados";
+import { dataFortaleza } from "@/lib/eventos";
 import { useSessao } from "@/lib/perfil-context";
 
 /** Carrega os dados básicos do Libens e expõe permissões derivadas. */
 export function useDados() {
-  const { usuario, perfil, autenticado } = useSessao();
-  const enabled = autenticado && !!usuario.id;
+  const { usuario, perfil, autenticado, carregando, ativo } = useSessao();
+  const enabled = autenticado && !carregando && ativo && !!usuario.id;
   const k = (n: string) => ["libens", n, usuario.id];
   const ministerios = useQuery({ queryKey: k("ministerios"), queryFn: listarMinisterios, enabled });
   const pessoas = useQuery({ queryKey: k("pessoas"), queryFn: listarPessoas, enabled });
@@ -62,6 +63,5 @@ export function useDados() {
 }
 
 export function hojeIso() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  return dataFortaleza();
 }
