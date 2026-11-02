@@ -16,6 +16,7 @@ import {
 import { formatarData } from "@/data/mock";
 import { supabase } from "@/integrations/supabase/client";
 import { hora, listarDisponibilidade, traduzirErroDb } from "@/lib/dados";
+import { eventoAindaAberto } from "@/lib/eventos";
 import { gerarEscala, type Candidato } from "@/lib/gerador-escala";
 import { useSessao } from "@/lib/perfil-context";
 import { useDados } from "@/lib/use-dados";
@@ -103,36 +104,17 @@ export function EditorEscala({
 
   const salvar = async (publicar: boolean) => {
     if (!evento || !ministryId) return;
+    if (!eventoAindaAberto(evento)) return setErro("Este evento está encerrado ou cancelado.");
+    if (membros.some((p) => sel.has(p.id) && !p.active)) return setErro("Remova os membros inativos da seleção.");
+    if (membros.some((p) => sel.has(p.id) && statusDisp(p.id) === "Indisponível") &&
+      !window.confirm("Há membros marcados como indisponíveis. Deseja manter esta exceção na escala?")) return;
     setSalvando(true);
     setErro(null);
     try {
-      const atuais = new Set(existentes.map((s) => s.user_id));
-      for (const s of existentes.filter((s) => !sel.has(s.user_id))) {
-        const r = s.status === "draft"
-          ? await supabase.from("schedules").delete().eq("id", s.id)
-          : await supabase.from("schedules").update({ status: "cancelled" }).eq("id", s.id);
-        if (r.error) throw r.error;
-      }
-      const novos = [...sel].filter((u) => !atuais.has(u)).map((user_id) => ({
-        event_id: evento.id, ministry_id: ministryId, user_id,
-        status: publicar ? "scheduled" : "draft", created_by: usuario.id,
-      }));
-      if (novos.length) {
-        const r = await supabase.from("schedules").insert(novos);
-        if (r.error) throw r.error;
-      }
-      if (publicar) {
-        const r = await supabase.from("schedules").update({ status: "scheduled" })
-          .eq("event_id", evento.id).eq("ministry_id", ministryId).eq("status", "draft");
-        if (r.error) throw r.error;
-      }
-      if (qtd > 0 || d.necessidades.some((x) => x.event_id === evento.id && x.ministry_id === ministryId)) {
-        const r = await supabase.from("event_ministry_needs").upsert(
-          { event_id: evento.id, ministry_id: ministryId, required_count: qtd },
-          { onConflict: "event_id,ministry_id" },
-        );
-        if (r.error) throw r.error;
-      }
+      const { error } = await supabase.rpc("save_schedule", {
+        _event_id: evento.id, _ministry_id: ministryId, _users: [...sel], _publish: publicar, _required: qtd,
+      });
+      if (error) throw error;
       await d.recarregar();
       onFechar();
     } catch (e) {
@@ -164,7 +146,7 @@ export function EditorEscala({
             <Select value={eventId} onValueChange={setEventId}>
               <SelectTrigger aria-label="Evento"><SelectValue placeholder="Selecione o evento" /></SelectTrigger>
               <SelectContent>
-                {d.eventos.map((e) => (
+                {d.eventos.filter((e) => eventoAindaAberto(e)).map((e) => (
                   <SelectItem key={e.id} value={e.id}>{e.name} · {e.date.split("-").reverse().join("/")} {hora(e.start_time)}</SelectItem>
                 ))}
               </SelectContent>
@@ -226,7 +208,7 @@ export function EditorEscala({
                     <label key={p.id} className="flex items-start gap-3 rounded-lg border border-border p-3">
                       <Checkbox
                         checked={sel.has(p.id)}
-                        disabled={ocupado && !sel.has(p.id)}
+                        disabled={(!p.active || ocupado) && !sel.has(p.id)}
                         onCheckedChange={(v) => setSel((s) => { const n = new Set(s); if (v) n.add(p.id); else n.delete(p.id); return n; })}
                         className="mt-0.5"
                       />

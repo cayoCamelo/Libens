@@ -18,7 +18,7 @@ export function AppShell({
   descricao?: string;
   children: ReactNode;
 }) {
-  const { perfil, usuario, sair } = useSessao();
+  const { perfil, usuario, sair, carregando, ativo, erroPerfil, recarregarPerfil } = useSessao();
   const itens = navPorPerfil[perfil];
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [modoEscuro, setModoEscuro] = useState(false);
@@ -37,6 +37,19 @@ export function AppShell({
     localStorage.setItem("libens-tema", escuro ? "escuro" : "claro");
     document.documentElement.classList.toggle("dark", escuro);
   };
+
+  if (carregando || erroPerfil || !ativo) {
+    return (
+      <main className="mx-auto max-w-lg space-y-4 p-6" aria-live="polite">
+        <h1 className="text-xl font-semibold">Libens</h1>
+        <p>{carregando ? "Carregando seu perfil..." : erroPerfil ?? "Sua conta está inativa. Entre em contato com a administração."}</p>
+        {!carregando ? <div className="flex gap-4">
+          <button type="button" onClick={() => void recarregarPerfil()}>Tentar novamente</button>
+          <button type="button" onClick={() => void sair().catch(() => undefined)}>Sair</button>
+        </div> : null}
+      </main>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

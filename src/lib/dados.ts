@@ -60,7 +60,7 @@ export async function listarMinisterios() {
 }
 export async function listarPessoas() {
   return ok<PessoaDb[]>(
-    await supabase.from("profiles").select("id, full_name, email, phone, role, active, created_at").order("full_name"),
+    await supabase.rpc("list_people").order("full_name"),
   );
 }
 export async function listarMembros() {

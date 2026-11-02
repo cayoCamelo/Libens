@@ -589,6 +589,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      list_people: {
+        Args: Record<PropertyKey, never>
+        Returns: { id: string; full_name: string; email: string; phone: string | null; role: Database["public"]["Enums"]["app_role"]; active: boolean; created_at: string }[]
+      }
+      save_schedule: {
+        Args: { _event_id: string; _ministry_id: string; _users: string[]; _publish: boolean; _required: number }
+        Returns: undefined
+      }
       _evento_aberto: { Args: { _eid: string }; Returns: undefined }
       _notify: {
         Args: {
