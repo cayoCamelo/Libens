@@ -11,7 +11,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatarData } from "@/data/mock";
 import { supabase } from "@/integrations/supabase/client";
-import { hora, listarModelos, traduzirErroDb, type EventoDb } from "@/lib/dados";
+import { hora, listarModelos, rotuloEventoStatus, traduzirErroDb, type EventoDb } from "@/lib/dados";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const diasSemana = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
 import { useSessao } from "@/lib/perfil-context";
@@ -55,6 +57,12 @@ function EventosPage() {
     setSalvando(false);
     if (error) return setAviso(error.code === "23503" ? "Este evento possui escalas ou registros vinculados. Remova os vínculos antes de excluir." : traduzirErroDb(error));
     setExcluindo(null); await d.recarregar();
+  };
+  const [filtroStatus, setFiltroStatus] = useState("todos");
+  const cancelar = async (e: EventoDb, c: boolean) => {
+    const { error } = await supabase.rpc("set_event_cancelled", { _eid: e.id, _cancelled: c });
+    setAviso(error ? traduzirErroDb(error) : c ? "Evento cancelado." : "Evento reativado.");
+    await d.recarregar();
   };
   const [form, setForm] = useState<Form | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -144,8 +152,12 @@ function EventosPage() {
           {aviso ? <p className="text-xs text-muted-foreground">{aviso}</p> : null}
         </CardContent>
       </Card>
+      <Select value={filtroStatus} onValueChange={setFiltroStatus}>
+        <SelectTrigger className="mb-3 w-full sm:w-60" aria-label="Status"><SelectValue /></SelectTrigger>
+        <SelectContent><SelectItem value="todos">Todos os status</SelectItem>{Object.entries(rotuloEventoStatus).map(([v,l])=><SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
+      </Select>
       <div className="space-y-3">
-        {d.eventos.map((e) => {
+        {d.eventos.filter((e)=>filtroStatus==="todos"||e.status===filtroStatus).map((e) => {
           const needs = d.necessidades.filter((n) => n.event_id === e.id);
           return (
             <Card key={e.id}>
@@ -153,8 +165,8 @@ function EventosPage() {
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {formatarData(e.date)} · {hora(e.start_time)}{e.end_time ? `–${hora(e.end_time)}` : ""}
                 </p>
-                <p className="font-semibold text-foreground">{e.name}</p>
-                {podeEditar(e) ? <div className="flex gap-2"><Button size="sm" variant="ghost" onClick={()=>abrir(e)}><Pencil className="h-4 w-4" /> Editar</Button><Button size="sm" variant="ghost" onClick={()=>{setAviso(null);setExcluindo(e);}}><Trash2 className="h-4 w-4" /> Excluir</Button></div>:null}
+                <p className="font-semibold text-foreground">{e.name} <Badge variant={e.status==="cancelled"?"destructive":"outline"} className="ml-1 align-middle">{rotuloEventoStatus[e.status]}</Badge></p>
+                {podeEditar(e) ? <div className="flex flex-wrap gap-2">{e.status!=="completed"?<Button size="sm" variant="ghost" onClick={()=>void cancelar(e,e.status!=="cancelled")}>{e.status==="cancelled"?"Reativar":"Cancelar evento"}</Button>:null}<Button size="sm" variant="ghost" onClick={()=>abrir(e)}><Pencil className="h-4 w-4" /> Editar</Button><Button size="sm" variant="ghost" onClick={()=>{setAviso(null);setExcluindo(e);}}><Trash2 className="h-4 w-4" /> Excluir</Button></div>:null}
                 {e.location ? <p className="text-sm text-muted-foreground">{e.location}</p> : null}
                 {needs.length ? (
                   <p className="text-xs text-muted-foreground">
