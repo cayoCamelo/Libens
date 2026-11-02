@@ -1,7 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarPlus, Pencil, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { z } from "zod";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ import { useSessao } from "@/lib/perfil-context";
 import { useDados } from "@/lib/use-dados";
 
 export const Route = createFileRoute("/app/eventos")({
+  validateSearch: (s) => z.object({ novo: z.string().optional() }).parse(s),
   head: () => ({
     meta: [
       { property: "og:type", content: "website" },
@@ -87,6 +89,16 @@ function EventosPage() {
         : { name: "", date: "", start_time: "", end_time: "", location: "", description: "", needs },
     );
   };
+  const busca = Route.useSearch();
+  const navegar = useNavigate({ from: "/app/eventos" });
+  useEffect(() => {
+    if (busca.novo && podeCriar && !d.carregando) {
+      abrir();
+      void navegar({ search: {}, replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [busca.novo, podeCriar, d.carregando]);
+
 
   const salvar = async () => {
     if (!form || !podeCriar) return;
