@@ -4,13 +4,14 @@ import { useState } from "react";
 import { z } from "zod";
 
 import { EditorEscala } from "@/components/editor-escala";
+import { MinhasTrocas } from "@/components/minhas-trocas";
 import { AppShell } from "@/components/layout/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { dataBr, hora, rotuloStatus } from "@/lib/dados";
+import { dataBr, hora, rotuloEventoStatus, rotuloResposta, rotuloStatus } from "@/lib/dados";
 import { useSessao } from "@/lib/perfil-context";
 import { hojeIso, useDados } from "@/lib/use-dados";
 
@@ -75,6 +76,7 @@ function EscalasPage() {
           <Plus className="h-4 w-4" /> Criar escala
         </Button>
       ) : null}
+      <MinhasTrocas />
       <div className="mb-4 space-y-2">
         <Input aria-label="Pesquisar escalas" placeholder="Pesquisar evento, ministério ou pessoa..." value={texto} onChange={(e)=>setTexto(e.target.value)} />
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
@@ -100,7 +102,7 @@ function EscalasPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-xs font-medium tracking-wide text-muted-foreground">{dataBr(e.date)}</p>
-                    <p className="font-semibold text-foreground">{e.name}</p>
+                    <p className="font-semibold text-foreground">{e.name} <Badge variant="outline" className="ml-1 align-middle">{rotuloEventoStatus[e.status]}</Badge></p>
                     <p className="text-sm text-muted-foreground">
                       {hora(e.start_time)}{e.end_time ? `–${hora(e.end_time)}` : ""}
                     </p>
@@ -129,10 +131,10 @@ function EscalasPage() {
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-1.5">
-                        {itens.map((s) => <Badge key={s.id} variant="secondary">{d.nomePessoa(s.user_id)}</Badge>)}
+                        {itens.map((s) => <Badge key={s.id} variant={s.response==="declined"?"destructive":"secondary"} title={rotuloResposta[s.response]}>{d.nomePessoa(s.user_id)} · {s.response==="confirmed"?"✓":s.response==="declined"?"✗":"?"}</Badge>)}
                       </div>
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-xs text-muted-foreground">{criador ? `Criada por ${d.nomePessoa(criador)}` : ""}</p>
+                        <p className="text-xs text-muted-foreground">{itens.filter((s)=>s.response==="confirmed").length} confirmados · {itens.filter((s)=>s.response==="declined").length} recusaram · {itens.filter((s)=>s.response==="pending").length} sem resposta{criador ? " · " : ""}{criador ? `Criada por ${d.nomePessoa(criador)}` : ""}</p>
                         {d.podeGerenciar(m.id) ? (
                           <Button size="sm" variant="ghost" onClick={() => setEditor({ eventId: e.id, ministryId: m.id })}>
                             <Pencil className="h-3.5 w-3.5" /> Abrir
