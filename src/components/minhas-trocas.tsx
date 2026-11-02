@@ -38,7 +38,7 @@ export function MinhasTrocas() {
     setOcupado(true);
     const { error } = await fn();
     setOcupado(false);
-    if (error) return toast.error(traduzirErroDb(error));
+    if (error) { toast.error(traduzirErroDb(error)); return; }
     toast.success(ok);
     await d.recarregar();
   };
