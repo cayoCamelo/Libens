@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Pencil, Plus } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
@@ -72,9 +72,16 @@ function EscalasPage() {
   return (
     <AppShell titulo="Escalas" descricao={podeCriar ? "Próximos eventos e suas escalas" : "Suas escalas e equipes"}>
       {podeCriar ? (
-        <Button className="mb-4 w-full sm:w-auto" onClick={() => setEditor(null)}>
-          <Plus className="h-4 w-4" /> Criar escala
-        </Button>
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row">
+          <Button className="w-full sm:w-auto" onClick={() => setEditor(null)}>
+            <Plus className="h-4 w-4" /> Criar escala
+          </Button>
+          <Button asChild className="w-full sm:w-auto">
+            <Link to="/app/eventos" search={{ novo: "1" }}>
+              <Plus className="h-4 w-4" /> Criar Evento
+            </Link>
+          </Button>
+        </div>
       ) : null}
       <MinhasTrocas />
       <div className="mb-4 space-y-2">
