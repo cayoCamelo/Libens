@@ -1,4 +1,4 @@
-# # Libens
+# Libens
 
 Libens is an application for managing volunteer teams, schedules, and activities.
 
@@ -15,6 +15,16 @@ The project is being built using **Lovable, GitHub, Visual Studio Code, React, T
 The development process combines AI-assisted development with traditional programming. Lovable is used to accelerate the creation of interfaces and complex features, while Visual Studio Code is used for direct code editing, improvements, testing, and customization.
 
 GitHub is used for version control and to keep the project synchronized between the development environment and Lovable.
+
+### Latest Update — Leader Home
+
+The leader home page was simplified to prioritize **Next assignment**, **My upcoming assignments**, and **My availability**. Pending reminders remain visible when present.
+
+The duplicated top shortcuts and the **My ministries**, **Next event**, and **Schedules I manage** sections were removed from this view. Management features remain available through the navigation menu.
+
+This layout also applies to users assigned as ministry leaders, even when their profile role differs. The implementation is in [src/routes/app.inicio.tsx](src/routes/app.inicio.tsx).
+
+[Open Libens](https://pic-snapshot-creator.lovable.app/login)
 
 ### Development Workflow
 
@@ -79,6 +89,16 @@ O desenvolvimento utiliza **Lovable, GitHub, Visual Studio Code, React, TypeScri
 O processo de desenvolvimento combina programação assistida por inteligência artificial com programação tradicional. O Lovable é utilizado para acelerar a criação de interfaces e funcionalidades mais complexas, enquanto o Visual Studio Code é utilizado para edição direta do código, melhorias, testes e personalizações.
 
 O GitHub é utilizado para controle de versão e para manter o projeto sincronizado entre o ambiente de desenvolvimento e o Lovable.
+
+### Atualização recente — Início dos líderes
+
+A página inicial dos líderes foi simplificada para priorizar **Próxima escala**, **Minhas próximas escalas** e **Minha disponibilidade**. Os lembretes pendentes continuam visíveis quando existem.
+
+Foram retirados dessa visualização os atalhos superiores duplicados e os blocos **Meus ministérios**, **Próximo evento** e **Escalas que gerencio**. As funções de gerenciamento continuam acessíveis pelo menu de navegação.
+
+Esse layout também se aplica a usuários vinculados como líderes de ministério, mesmo quando o papel do perfil é diferente. A implementação está em [src/routes/app.inicio.tsx](src/routes/app.inicio.tsx).
+
+[Acessar o Libens](https://pic-snapshot-creator.lovable.app/login)
 
 ### Fluxo de Desenvolvimento
 
