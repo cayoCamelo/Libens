@@ -23,19 +23,20 @@ export interface ResultadoGeracao {
 
 const contaHistorico = (s: EscalaDb) => ["scheduled", "confirmed", "completed"].includes(s.status);
 
-function minutos(t: string | null | undefined, padrao: number) {
-  if (!t) return padrao;
-  const [h = 0, m = 0] = t.split(":").map(Number);
-  return h * 60 + m;
+function intervalo(evento: EventoDb) {
+  const inicio = Date.parse(`${evento.date}T${evento.start_time}-03:00`);
+  let fim = evento.end_time
+    ? Date.parse(`${evento.date}T${evento.end_time}-03:00`)
+    : inicio + 2 * 60 * 60 * 1000;
+  // Um término anterior ao início pertence ao dia seguinte.
+  if (evento.end_time && fim <= inicio) fim += 24 * 60 * 60 * 1000;
+  return { inicio, fim };
 }
 
 export function horariosConflitam(a: EventoDb, b: EventoDb) {
-  if (a.date !== b.date) return false;
-  const ai = minutos(a.start_time, 0);
-  const af = minutos(a.end_time, ai + 120);
-  const bi = minutos(b.start_time, 0);
-  const bf = minutos(b.end_time, bi + 120);
-  return ai < bf && bi < af;
+  const ai = intervalo(a);
+  const bi = intervalo(b);
+  return ai.inicio < bi.fim && bi.inicio < ai.fim;
 }
 
 function diasEntre(a: string, b: string) {
@@ -65,7 +66,8 @@ export function gerarEscala(params: {
     const conflito = dela.some((s) => {
       if (s.event_id === evento.id) return s.ministry_id !== ministryId || s.status !== "draft";
       const outro = porId.get(s.event_id);
-      return outro ? horariosConflitam(evento, outro) : false;
+      return outro && outro.active && !["cancelled", "completed"].includes(outro.status)
+        ? horariosConflitam(evento, outro) : false;
     });
     if (conflito) continue;
 
