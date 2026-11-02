@@ -1,6 +1,8 @@
-# Correções de segurança e confiabilidade — proposta revisável
+# Correções de segurança e confiabilidade — ativação
 
-Estado: branch preparada e testada localmente. **Nenhum SQL desta proposta foi aplicado à produção e nenhum frontend desta branch foi publicado.**
+Estado em 02/11/2026: **PRs #1 e #2 integrados e publicados. As duas etapas SQL foram aplicadas no banco do Libens.**
+
+Verificação: nove funções de aplicação sem EXECUTE para anon; leitura direta de email/phone revogada para authenticated; bucket privado com JPG/PNG/WEBP; contagens de membros, eventos e escalas preservadas. Uma chamada sem login foi bloqueada em teste transacional com identificador inexistente. Os arquivos de migração 0007 e 0008 reproduzem exatamente o SQL aplicado.
 
 ## Mudanças
 
@@ -14,7 +16,7 @@ Estado: branch preparada e testada localmente. **Nenhum SQL desta proposta foi a
 - A tela inicial exclui eventos encerrados/cancelados e usa data de Fortaleza. Remove condições inalcançáveis do layout dos líderes.
 - Corrige o lockfile, adiciona comandos de tipos/testes e CI em Node 24.
 
-## Ativação em etapas (exige autorização para produção)
+## Ordem de ativação executada
 
 1. Confirmar que `main` não ganhou alterações conflitantes e verificar backup/restauração pelo provedor. A proposta não contém exclusão de tabelas ou de cadastros.
 2. Aplicar [SQL da etapa 1](sql/security-hardening.sql) em transação. Acrescenta RPCs/trigger e endurece permissões. Ainda mantém SELECT dos contatos para compatibilidade temporária com o frontend anterior.
@@ -23,13 +25,13 @@ Estado: branch preparada e testada localmente. **Nenhum SQL desta proposta foi a
 5. Aplicar [SQL da etapa 2](sql/restrict-profile-contacts.sql): remove leitura direta das colunas de contato. Conferir `has_column_privilege('authenticated','public.profiles','email','SELECT') = false` e o mesmo para `phone`.
 6. Validar novo login, próprio perfil, lista de membros, criação/edição de escalas, troca e foto com contas controladas. Executar os advisors do provedor, se disponíveis.
 
-As políticas novas têm nomes fixos: não reaplicar cegamente o SQL da etapa 1. Antes de repetir, conferir se a transação anterior terminou. Depois da aprovação, registrar as mudanças no histórico oficial de migrações com a ferramenta do projeto; estes arquivos são propostas SQL, não migrações já instaladas.
+As políticas novas têm nomes fixos: **não reaplicar o SQL manualmente**. O SQL aplicado está versionado nas migrações Drizzle 0007/0008 e registrado no histórico do banco. Os arquivos docs/sql são as propostas históricas aprovadas. Novos ambientes executam as migrações em ordem.
 
 ## Testes realizados e limites
 
 - `npm ci --ignore-scripts --no-audit --no-fund`: instalação reproduzível.
 - `npm run typecheck`: checagem TypeScript.
-- `npm test`: banco PostgreSQL local em memória (PGlite), papéis anon/authenticated, RLS e dados fictícios. Testa privilégios, contatos, inativos, rollback, conflito e revalidação da troca, além de datas/fusos.
+- `npm test`: 19 testes reportados após integrar os dois PRs; banco PostgreSQL local em memória (PGlite), papéis anon/authenticated, RLS e dados fictícios. Testa privilégios, contatos, inativos, rollback, conflito e revalidação da troca, além de datas/fusos.
 - `npm run build`: cliente e servidor.
 
 PGlite usa substitutos mínimos para Auth/Storage e não substitui o teste da API REST, concorrência real entre conexões, cookies, recuperação de senha, upload no Storage ou teste visual autenticado no Lovable. O teste local não executa pg_cron e não verifica entrega de notificações no celular. Não houve alteração das configurações globais de Auth, MFA, política de senhas ou backups.
@@ -39,4 +41,4 @@ PGlite usa substitutos mínimos para Auth/Storage e não substitui o teste da AP
 - Auditoria completa de concorrência entre edições de evento e escalas, e do limite de dois ministérios.
 - Paginação e limites das consultas, observabilidade e revisão de dependências obsoletas.
 - Ajuste do gerador de sugestões para conflitos que atravessam meia-noite; o banco proposto bloqueia gravações conflitantes, mas a sugestão ainda precisa ser refinada.
-- Testes de navegador com sessões reais e advisors no ambiente do provedor antes de considerar a ativação homologada.
+- Testes de navegador com sessões reais e advisors no ambiente do provedor. A publicação foi verificada pelos bundles públicos servidos; não foi realizado login com senha de usuário.

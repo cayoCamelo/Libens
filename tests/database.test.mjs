@@ -28,8 +28,6 @@ test('SQL: permissões, privacidade, contas inativas, transação e trocas', asy
     for (const name of (await readdir(dir)).filter(n=>n.endsWith('.sql')&&!n.includes('enable_pg_cron')).sort()) {
       await db.exec(await readFile(new URL(name,dir),'utf8'));
     }
-    await db.exec(await readFile(new URL('../docs/sql/security-hardening.sql',import.meta.url),'utf8'));
-    await db.exec(await readFile(new URL('../docs/sql/restrict-profile-contacts.sql',import.meta.url),'utf8'));
     const session = async (role,user=null) => {
       await db.exec('RESET ROLE');
       await q("SELECT set_config('request.jwt.claim.sub',$1,false)",[user??'']);

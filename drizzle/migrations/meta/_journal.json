@@ -50,6 +50,20 @@
       "when": 1792182836055,
       "tag": "0006_confirmacoes_trocas_status_eventos",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793640139044,
+      "tag": "0007_security_hardening",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793640154545,
+      "tag": "0008_restrict_profile_contacts",
+      "breakpoints": true
     }
   ]
 }
