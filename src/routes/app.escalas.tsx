@@ -8,7 +8,7 @@ import {
   SlidersHorizontal,
   Trash2,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { EditorEscala } from "@/components/editor-escala";
 import { EditorEvento } from "@/components/editor-evento";
@@ -65,13 +65,30 @@ export const Route = createFileRoute("/app/escalas")({
       { property: "og:description", content: "Escalas dos ministérios para cada evento." },
     ],
   }),
-  component: EscalasPage,
+  component: EscalasRoute,
 });
 
-function EscalasPage() {
+function EscalasRoute() {
+  const busca = Route.useSearch();
+  return <EscalasPage busca={busca} />;
+}
+
+export function EscalasPage({
+  busca = {},
+}: { busca?: { evento?: string | undefined; ministerio?: string | undefined } } = {}) {
   const { usuario } = useSessao();
   const d = useDados();
-  const busca = Route.useSearch();
+  const [agora, setAgora] = useState(() => new Date());
+  const [historico, setHistorico] = useState(false);
+  useEffect(() => {
+    const atualizar = () => setAgora(new Date());
+    const timer = window.setInterval(atualizar, 15000);
+    window.addEventListener("focus", atualizar);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", atualizar);
+    };
+  }, []);
   const [editor, setEditor] = useState<{ eventId: string; ministryId: string } | null | undefined>(
     undefined,
   );
@@ -83,7 +100,7 @@ function EscalasPage() {
   const podeCriar = d.global || d.lidero.size > 0;
   const hoje = hojeIso();
   const [mes, setMes] = useState(hoje.slice(0, 7));
-  const [periodo, setPeriodo] = useState("mes");
+  const [periodo, setPeriodo] = useState("proximos");
   const [de, setDe] = useState(hoje);
   const [ate, setAte] = useState(hoje);
   const [texto, setTexto] = useState("");
@@ -104,7 +121,11 @@ function EscalasPage() {
   );
   const proximos = d.eventos
     .filter((e) => {
-      if (e.date < intervalo[0] || e.date > intervalo[1] || (ev !== "todos" && ev !== e.id))
+      if (!historico && !eventoAindaAberto(e, agora)) return false;
+      if (
+        (periodo !== "proximos" && (e.date < intervalo[0] || e.date > intervalo[1])) ||
+        (ev !== "todos" && ev !== e.id)
+      )
         return false;
       const rows = itensFiltrados.filter((s) => s.event_id === e.id);
       if (
@@ -215,7 +236,7 @@ function EscalasPage() {
     pessoa !== "todos",
     status !== "todos",
     visao !== "todas",
-    periodo !== "mes",
+    periodo !== "proximos",
   ].filter(Boolean).length;
   return (
     <AppShell titulo="Escalas" descricao="Escalas e equipes do mês">
@@ -239,7 +260,7 @@ function EscalasPage() {
               id="escala-mes"
               type="month"
               className="min-h-11 w-full min-w-0"
-              value={mes}
+              value={periodo === "proximos" ? "" : mes}
               onChange={(e) => {
                 if (e.target.value) {
                   setMes(e.target.value);
@@ -275,6 +296,7 @@ function EscalasPage() {
             />
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               {filtro("Período", periodo, setPeriodo, [
+                ["proximos", "Próximos eventos"],
                 ["mes", "Mês selecionado"],
                 ["hoje", "Hoje"],
                 ["semana", "Esta semana"],
@@ -331,7 +353,8 @@ function EscalasPage() {
                 setPessoa("todos");
                 setStatus("todos");
                 setVisao("todas");
-                setPeriodo("mes");
+                setPeriodo("proximos");
+                setHistorico(false);
               }}
             >
               Limpar filtros adicionais
@@ -339,10 +362,30 @@ function EscalasPage() {
           </div>
         ) : null}
       </div>
+      <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Visualização das escalas">
+        <Button
+          variant={!historico ? "default" : "outline"}
+          aria-pressed={!historico}
+          onClick={() => setHistorico(false)}
+        >
+          Próximos eventos
+        </Button>
+        <Button
+          variant={historico ? "default" : "outline"}
+          aria-pressed={historico}
+          onClick={() => setHistorico(true)}
+        >
+          Histórico e todos
+        </Button>
+      </div>
       <MinhasTrocas />
       <div className="mb-2 flex items-center justify-between gap-2 text-sm text-muted-foreground">
         <span>
-          {dataBr(intervalo[0])} – {dataBr(intervalo[1])}
+          {periodo === "proximos"
+            ? historico
+              ? "Histórico e todos os eventos"
+              : "Próximos eventos"
+            : `${dataBr(intervalo[0])} – ${dataBr(intervalo[1])}`}
         </span>
         <span className="shrink-0">{proximos.length} eventos</span>
       </div>

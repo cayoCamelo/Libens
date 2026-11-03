@@ -1,3 +1,4 @@
+import { eventoAindaAberto } from "@/lib/eventos";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronDown, ChevronUp, Repeat } from "lucide-react";
 import { useState } from "react";
@@ -11,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import {
   dataBr,
-  eventoAberto,
   hora,
   listarTrocas,
   rotuloEventoStatus,
@@ -83,7 +83,8 @@ export function MinhasTrocas({
         (!eventId || s.event_id === eventId) &&
         s.user_id === usuario.id &&
         ["scheduled", "confirmed"].includes(s.status) &&
-        eventoAberto(evento(s.event_id)),
+        !!evento(s.event_id) &&
+        eventoAindaAberto(evento(s.event_id)!),
     )
     .sort((a, b) => (evento(a.event_id)?.date ?? "").localeCompare(evento(b.event_id)?.date ?? ""));
   const paraMim = lista.filter(

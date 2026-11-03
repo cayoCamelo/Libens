@@ -15,6 +15,7 @@ import { formatarWhatsapp, useAvatarUrl, useMeuPerfilExtra } from "@/lib/avatar"
 import { rotulosPerfil } from "@/lib/dados";
 import { useSessao } from "@/lib/perfil-context";
 import { useDados } from "@/lib/use-dados";
+import { Acessibilidade } from "@/components/acessibilidade";
 import { InstalarLibens } from "@/components/instalar-libens";
 
 export const Route = createFileRoute("/app/perfil")({
@@ -152,9 +153,6 @@ function PerfilPage() {
 
   return (
     <AppShell titulo="Perfil" descricao="Seus dados no Libens">
-      <div className="mb-4">
-        <InstalarLibens />
-      </div>
       <div className="space-y-4">
         <Card>
           <CardContent className="flex flex-col items-center gap-3 p-5 text-center">
@@ -284,6 +282,8 @@ function PerfilPage() {
             />
           </CardContent>
         </Card>
+        <Acessibilidade />
+        <InstalarLibens />
       </div>
     </AppShell>
   );

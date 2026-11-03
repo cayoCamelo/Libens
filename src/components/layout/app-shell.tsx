@@ -1,14 +1,10 @@
+import { useAreaEmbutida } from "@/lib/area-embutida";
+import { aplicarTamanhoFonte, chaveFonte, validarTamanhoFonte } from "@/lib/acessibilidade";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { LibensLogo } from "@/components/libens-logo";
-import { LogOut, Moon, Sun, MoreHorizontal } from "lucide-react";
+import { LogOut, Moon, Sun } from "lucide-react";
 import { navPorPerfil } from "@/components/layout/nav-config";
 import { SinoNotificacoes } from "@/components/sino-notificacoes";
 import { useAvatarUrl, useMeuPerfilExtra } from "@/lib/avatar";
@@ -28,6 +24,8 @@ export function AppShell({
 }) {
   const { perfil, usuario, sair, carregando, ativo, erroPerfil, recarregarPerfil } = useSessao();
   const itens = navPorPerfil[perfil];
+  const embutida = useAreaEmbutida();
+  const pastoral = perfil === "pastor";
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [modoEscuro, setModoEscuro] = useState(false);
   const extra = useMeuPerfilExtra(usuario.id);
@@ -38,6 +36,15 @@ export function AppShell({
     setModoEscuro(escuro);
     document.documentElement.classList.toggle("dark", escuro);
   }, []);
+
+  useEffect(() => {
+    if (!usuario.id) return;
+    try {
+      aplicarTamanhoFonte(validarTamanhoFonte(localStorage.getItem(chaveFonte(usuario.id))));
+    } catch {
+      aplicarTamanhoFonte("padrao");
+    }
+  }, [usuario.id]);
 
   const alternarTema = () => {
     const escuro = !modoEscuro;
@@ -69,71 +76,80 @@ export function AppShell({
     );
   }
 
+  if (embutida)
+    return (
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold">{titulo}</h2>
+        {children}
+      </section>
+    );
   return (
     <div className="min-h-screen bg-background">
       <AvisosNoAparelho key={usuario.id} />
       <CompletarCadastro />
       {/* Navegação lateral (tablet e desktop) */}
-      <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-border bg-card px-4 py-6 md:flex">
-        <Link to="/app/inicio" className="px-2">
-          <LibensLogo />
-        </Link>
+      {!pastoral ? (
+        <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-border bg-card px-4 py-6 md:flex">
+          <Link to={perfil === "admin" ? "/app/painel" : "/app/inicio"} className="px-2">
+            <LibensLogo />
+          </Link>
 
-        <nav className="mt-8 flex flex-1 flex-col gap-1">
-          {itens.map((item) => {
-            const ativo = pathname === item.to;
-            return (
-              <Link
-                key={item.to}
-                to={item.to}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                  ativo
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-                )}
-              >
-                <item.icone className="h-4.5 w-4.5 shrink-0" />
-                <span className="truncate">{item.rotulo}</span>
-              </Link>
-            );
-          })}
-        </nav>
+          <nav className="mt-8 flex flex-1 flex-col gap-1">
+            {itens.map((item) => {
+              const ativo = pathname === item.to;
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                    ativo
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                  )}
+                >
+                  <item.icone className="h-4.5 w-4.5 shrink-0" />
+                  <span className="truncate">{item.rotulo}</span>
+                </Link>
+              );
+            })}
+          </nav>
 
-        <div className="mt-4 border-t border-border pt-4">
-          <button
-            type="button"
-            onClick={() => void sair()}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-          >
-            <LogOut className="h-4.5 w-4.5 shrink-0" />
-            Sair
-          </button>
-        </div>
-      </aside>
+          <div className="mt-4 border-t border-border pt-4">
+            <button
+              type="button"
+              onClick={() => void sair()}
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            >
+              <LogOut className="h-4.5 w-4.5 shrink-0" />
+              Sair
+            </button>
+          </div>
+        </aside>
+      ) : null}
 
-      <div className="md:pl-64">
+      <div className={pastoral ? "" : "md:pl-64"}>
         <header className="sticky top-0 z-10 border-b border-border bg-background/90 backdrop-blur">
-          <div className="mx-auto grid max-w-3xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3.5 md:px-8">
+          <div className="app-topo mx-auto grid max-w-3xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3.5 md:px-8">
             <div className="min-w-0">
-              <div className="md:hidden">
+              <div className={pastoral ? "" : "md:hidden"}>
                 <LibensLogo compacto />
               </div>
-              <h1 className="truncate text-lg font-semibold tracking-tight text-foreground md:text-xl">
+              <h1 className="break-words text-lg font-semibold tracking-tight text-foreground md:text-xl">
                 {titulo}
               </h1>
               {descricao ? (
-                <p className="truncate text-sm text-muted-foreground">{descricao}</p>
+                <p className="break-words text-sm text-muted-foreground">{descricao}</p>
               ) : null}
             </div>
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="app-acoes flex shrink-0 items-center gap-2">
               <SinoNotificacoes />
               <button
                 type="button"
                 onClick={alternarTema}
                 aria-label={modoEscuro ? "Ativar modo claro" : "Ativar modo escuro"}
                 title={modoEscuro ? "Ativar modo claro" : "Ativar modo escuro"}
-                className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                className="grid min-h-9 min-w-9 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               >
                 {modoEscuro ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
               </button>
@@ -141,17 +157,19 @@ export function AppShell({
                 type="button"
                 onClick={() => void sair()}
                 aria-label="Sair"
-                className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground md:hidden"
+                className="grid min-h-9 min-w-9 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground md:hidden"
               >
                 <LogOut className="h-4.5 w-4.5" />
               </button>
               <Link
                 to="/app/perfil"
                 aria-label="Meu perfil"
-                className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-secondary text-sm font-semibold text-secondary-foreground"
+                className="grid min-h-9 min-w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-secondary text-sm font-semibold text-secondary-foreground"
               >
                 {foto ? (
                   <img src={foto} alt="" className="h-full w-full object-cover" />
+                ) : pastoral ? (
+                  "Perfil"
                 ) : (
                   usuario.nome.charAt(0).toUpperCase()
                 )}
@@ -162,81 +180,49 @@ export function AppShell({
 
         <main
           className={cn(
-            "mx-auto px-4 pt-5 pb-28 md:px-8 md:pb-10",
+            "mx-auto px-4 pt-5 md:px-8 md:pb-10",
+            pastoral ? "pb-10" : perfil === "admin" ? "pb-56" : "pb-28",
             perfil === "admin" || perfil === "pastor" ? "max-w-5xl" : "max-w-3xl",
           )}
         >
+          {pastoral && pathname !== "/app/painel" ? (
+            <Link
+              to="/app/painel"
+              className="mb-4 inline-flex min-h-11 items-center text-sm text-primary"
+            >
+              ← Voltar ao Painel pastoral
+            </Link>
+          ) : null}
           {children}
         </main>
       </div>
 
-      <nav
-        aria-label="Navegação do aplicativo"
-        className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-card/95 backdrop-blur md:hidden"
-      >
-        <ul className="flex items-stretch">
-          {(itens.length <= 4 ? itens : itens.slice(0, 3)).map((item) => (
-            <li key={item.to} className="min-w-0 flex-1">
-              <Link
-                to={item.to}
-                aria-current={pathname === item.to ? "page" : undefined}
-                className={cn(
-                  "flex min-h-16 flex-col items-center justify-center gap-1 px-1 py-2 text-[11px]",
-                  pathname === item.to ? "text-primary" : "text-muted-foreground",
-                )}
-              >
-                <item.icone className="h-5 w-5" />
-                <span className="w-full truncate text-center">
-                  {item.rotulo.startsWith("Visão")
-                    ? "Painel"
-                    : item.to === "/app/admin"
-                      ? "Contas"
-                      : item.rotulo}
-                </span>
-              </Link>
-            </li>
-          ))}
-          {itens.length > 4 ? (
-            <li className="min-w-0 flex-1">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className={cn(
-                      "flex min-h-16 w-full flex-col items-center justify-center gap-1 px-1 py-2 text-[11px]",
-                      itens.slice(3).some((i) => i.to === pathname)
-                        ? "text-primary"
-                        : "text-muted-foreground",
-                    )}
-                    aria-label="Mais páginas"
-                  >
-                    <MoreHorizontal className="h-5 w-5" />
-                    <span>Mais</span>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  side="top"
-                  align="end"
-                  className="mb-2 w-60 max-w-[calc(100vw-1rem)]"
+      {!pastoral ? (
+        <nav
+          aria-label="Navegação do aplicativo"
+          className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+        >
+          <ul
+            className={cn("grid items-stretch", perfil === "admin" ? "grid-cols-3" : "grid-cols-4")}
+          >
+            {itens.map((item) => (
+              <li key={item.to} className="min-w-0">
+                <Link
+                  to={item.to}
+                  aria-current={pathname === item.to ? "page" : undefined}
+                  className={cn(
+                    "flex min-h-16 flex-col items-center justify-center gap-1 px-1 py-2 text-xs",
+                    pathname === item.to ? "text-primary" : "text-muted-foreground",
+                  )}
                 >
-                  {itens.slice(3).map((item) => (
-                    <DropdownMenuItem key={item.to} asChild>
-                      <Link
-                        to={item.to}
-                        className="min-h-11 gap-3"
-                        aria-current={pathname === item.to ? "page" : undefined}
-                      >
-                        <item.icone className="h-4 w-4" />
-                        {item.rotulo}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </li>
-          ) : null}
-        </ul>
-      </nav>
+                  <item.icone className="h-5 w-5 shrink-0" />
+                  <span className="w-full break-words text-center leading-snug">{item.rotulo}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      ) : null}
     </div>
   );
 }

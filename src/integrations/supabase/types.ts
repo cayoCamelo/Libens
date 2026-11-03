@@ -589,6 +589,16 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      set_member_access: {
+        Args: {
+          _uid: string;
+          _role: "servo" | "lider" | "pastor" | "admin";
+          _leaders: string[];
+          _active: boolean;
+        };
+        Returns: undefined;
+      };
+
       signup_ministries: {
         Args: Record<PropertyKey, never>;
         Returns: { id: string; name: string }[];

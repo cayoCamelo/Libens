@@ -150,3 +150,30 @@
     font-family: var(--font-display);
   }
 }
+
+/* Text enlargement keeps controls and labels readable rather than clipping them. */
+html[data-fonte="grande"] .truncate,
+html[data-fonte="muitoGrande"] .truncate {
+  overflow: visible;
+  white-space: normal;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+}
+html[data-fonte="grande"] button,
+html[data-fonte="muitoGrande"] button {
+  height: auto;
+  min-height: 2.75rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+html[data-fonte="grande"] [role="dialog"],
+html[data-fonte="muitoGrande"] [role="dialog"] {
+  max-width: calc(100vw - 1rem);
+}
+
+html[data-fonte="grande"] .app-topo,
+html[data-fonte="muitoGrande"] .app-topo { grid-template-columns: minmax(0,1fr); }
+html[data-fonte="grande"] .app-acoes,
+html[data-fonte="muitoGrande"] .app-acoes { justify-content: flex-end; flex-wrap: wrap; }
+html[data-fonte="grande"] .resumo-gestao,
+html[data-fonte="muitoGrande"] .resumo-gestao { grid-template-columns: repeat(auto-fit,minmax(min(100%,7rem),1fr)); }

@@ -528,7 +528,7 @@ test("SQL: permissões, privacidade, contas inativas, transação e trocas", asy
         );
         await assert.rejects(
           q("INSERT INTO ministry_leaders(user_id,ministry_id) VALUES ($1,$2)", [id(700), mid]),
-          /row-level security/,
+          /permission denied/,
         );
         await session("postgres");
         await q("INSERT INTO auth.users(id,email) VALUES ($1,$2)", [
@@ -548,8 +548,7 @@ test("SQL: permissões, privacidade, contas inativas, transação e trocas", asy
       await session("postgres");
       await q("UPDATE profiles SET role='pastor' WHERE id=$1", [id(701)]);
       await session("authenticated", id(701));
-      await q("INSERT INTO ministry_leaders(user_id,ministry_id) VALUES ($1,$2)", [id(700), mid]);
-      await q("UPDATE profiles SET role='lider' WHERE id=$1", [id(700)]);
+      await q("SELECT set_member_access($1,'lider',$2,true)", [id(700), [mid]]);
       await assert.rejects(
         q("UPDATE profiles SET role='pastor' WHERE id=$1", [id(700)]),
         /permissão/,
@@ -562,6 +561,53 @@ test("SQL: permissões, privacidade, contas inativas, transação e trocas", asy
       );
       await session("authenticated", id(1));
       await assert.rejects(q("UPDATE profiles SET role='admin' WHERE id=$1", [id(700)]), /única/);
+    });
+    await t.test("acessos: atomicidade, liderança real, limites e privacidade", async () => {
+      await session("authenticated", id(3));
+      await assert.rejects(
+        q("SELECT set_member_access($1,'lider',$2,true)", [id(700), [mid]]),
+        /Somente Pastor/,
+      );
+      await session("authenticated", id(701));
+      await assert.rejects(
+        q("SELECT set_member_access($1,'pastor',$2,true)", [id(700), []]),
+        /Somente Admin/,
+      );
+      await assert.rejects(
+        q("SELECT set_member_access($1,'lider',$2,true)", [id(700), [id(9999)]]),
+        /ativos/,
+      );
+      await assert.rejects(
+        q("SELECT set_member_access($1,'lider',$2,true)", [id(700), []]),
+        /um ou dois/,
+      );
+      assert.equal(
+        (await q("SELECT ministry_id FROM ministry_leaders WHERE user_id=$1", [id(700)])).rows[0]
+          .ministry_id,
+        mid,
+      );
+      await q("SELECT set_member_access($1,'servo',$2,true)", [id(700), []]);
+      assert.equal(
+        (await q("SELECT * FROM ministry_leaders WHERE user_id=$1", [id(700)])).rows.length,
+        0,
+      );
+      assert.equal(
+        (await q("SELECT * FROM user_ministries WHERE user_id=$1", [id(700)])).rows.length,
+        2,
+      );
+      await session("authenticated", id(700));
+      await assert.rejects(
+        q("SELECT save_schedule($1,$2,$3,true,1)", [eid, mid, [id(3)]]),
+        /Sem permissão/,
+      );
+      await session("authenticated", id(1));
+      await q("SELECT set_member_access($1,'pastor',$2,true)", [id(700), []]);
+      await assert.rejects(
+        q("SELECT set_member_access($1,'servo',$2,true)", [id(1), []]),
+        /protegida/,
+      );
+      await session("postgres");
+      await q("UPDATE profiles SET role='servo' WHERE id=$1", [id(700)]);
     });
     await t.test(
       "troca nova exige aceite e mantém original até confirmação; valida conflito e autoria",

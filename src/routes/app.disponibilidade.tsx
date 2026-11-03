@@ -37,7 +37,7 @@ const semana = ["D", "S", "T", "Q", "Q", "S", "S"];
 const iso = (a: number, m: number, d: number) =>
   `${a}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 
-function DisponibilidadePage() {
+export function DisponibilidadePage() {
   const { usuario } = useSessao();
   const d = useDados();
   const qc = useQueryClient();
@@ -50,7 +50,11 @@ function DisponibilidadePage() {
   // Pessoas cuja disponibilidade posso consultar
   const consultaveis = d.global
     ? d.pessoas
-    : d.pessoas.filter((p) => p.role !== "admin" && d.membros.some((m) => m.user_id === p.id && d.lidero.has(m.ministry_id)));
+    : d.pessoas.filter(
+        (p) =>
+          p.role !== "admin" &&
+          d.membros.some((m) => m.user_id === p.id && d.lidero.has(m.ministry_id)),
+      );
 
   const q = useQuery({
     queryKey: ["libens", "disp", pessoaId],
@@ -65,9 +69,18 @@ function DisponibilidadePage() {
     // Não informado -> Disponível -> Indisponível -> Não informado
     const { error } =
       atual === undefined
-        ? await supabase.from("availability").upsert({ user_id: usuario.id, date: data, available: true }, { onConflict: "user_id,date" })
+        ? await supabase
+            .from("availability")
+            .upsert(
+              { user_id: usuario.id, date: data, available: true },
+              { onConflict: "user_id,date" },
+            )
         : atual
-          ? await supabase.from("availability").update({ available: false }).eq("user_id", usuario.id).eq("date", data)
+          ? await supabase
+              .from("availability")
+              .update({ available: false })
+              .eq("user_id", usuario.id)
+              .eq("date", data)
           : await supabase.from("availability").delete().eq("user_id", usuario.id).eq("date", data);
     if (error) alert(error.message);
     await qc.invalidateQueries({ queryKey: ["libens", "disp", pessoaId] });
@@ -75,32 +88,58 @@ function DisponibilidadePage() {
 
   const primeiro = new Date(mes.a, mes.m, 1).getDay();
   const dias = new Date(mes.a, mes.m + 1, 0).getDate();
-  const titulo = new Date(mes.a, mes.m, 1).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
-  const mover = (n: number) => setMes(({ a, m }) => { const x = new Date(a, m + n, 1); return { a: x.getFullYear(), m: x.getMonth() }; });
+  const titulo = new Date(mes.a, mes.m, 1).toLocaleDateString("pt-BR", {
+    month: "long",
+    year: "numeric",
+  });
+  const mover = (n: number) =>
+    setMes(({ a, m }) => {
+      const x = new Date(a, m + n, 1);
+      return { a: x.getFullYear(), m: x.getMonth() };
+    });
 
   return (
-    <AppShell titulo="Disponibilidade" descricao={minha ? "Toque no dia para alterar" : "Somente leitura"}>
+    <AppShell
+      titulo="Disponibilidade"
+      descricao={minha ? "Toque no dia para alterar" : "Somente leitura"}
+    >
       {consultaveis.length > 0 ? (
         <Select value={pessoaId} onValueChange={setAlvo}>
-          <SelectTrigger className="mb-4" aria-label="Pessoa"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="mb-4" aria-label="Pessoa">
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value={usuario.id}>Minha disponibilidade</SelectItem>
-            {consultaveis.filter((p) => p.id !== usuario.id).map((p) => (
-              <SelectItem key={p.id} value={p.id}>{p.full_name || p.email}</SelectItem>
-            ))}
+            {consultaveis
+              .filter((p) => p.id !== usuario.id)
+              .map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.full_name || p.email}
+                </SelectItem>
+              ))}
           </SelectContent>
         </Select>
       ) : null}
       <Card>
         <CardContent className="p-4">
           <div className="mb-3 flex items-center justify-between">
-            <Button variant="ghost" size="icon" onClick={() => mover(-1)} aria-label="Mês anterior"><ChevronLeft className="h-4 w-4" /></Button>
+            <Button variant="ghost" size="icon" onClick={() => mover(-1)} aria-label="Mês anterior">
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
             <p className="font-semibold capitalize text-foreground">{titulo}</p>
-            <Button variant="ghost" size="icon" onClick={() => mover(1)} aria-label="Próximo mês"><ChevronRight className="h-4 w-4" /></Button>
+            <Button variant="ghost" size="icon" onClick={() => mover(1)} aria-label="Próximo mês">
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           </div>
           <div className="grid grid-cols-7 gap-1.5 text-center">
-            {semana.map((s, i) => <span key={i} className="text-xs font-medium text-muted-foreground">{s}</span>)}
-            {Array.from({ length: primeiro }).map((_, i) => <span key={`v${i}`} />)}
+            {semana.map((s, i) => (
+              <span key={i} className="text-xs font-medium text-muted-foreground">
+                {s}
+              </span>
+            ))}
+            {Array.from({ length: primeiro }).map((_, i) => (
+              <span key={`v${i}`} />
+            ))}
             {Array.from({ length: dias }).map((_, i) => {
               const data = iso(mes.a, mes.m, i + 1);
               const v = mapa.get(data);
@@ -124,13 +163,26 @@ function DisponibilidadePage() {
             })}
           </div>
           <div className="mt-4 flex flex-wrap justify-center gap-4 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-full bg-success" /> Disponível</span>
-            <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-full bg-destructive" /> Indisponível</span>
-            <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-full border border-border" /> Não informado</span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-3 w-3 rounded-full bg-success" /> Disponível
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-3 w-3 rounded-full bg-destructive" /> Indisponível
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-3 w-3 rounded-full border border-border" /> Não informado
+            </span>
           </div>
         </CardContent>
       </Card>
-      {consultaveis.length > 0 ? <details className="mt-5"><summary className="cursor-pointer py-3 text-sm font-medium">Consultar disponibilidade da equipe</summary><DisponibilidadeEquipe /></details> : null}
+      {consultaveis.length > 0 ? (
+        <details className="mt-5">
+          <summary className="cursor-pointer py-3 text-sm font-medium">
+            Consultar disponibilidade da equipe
+          </summary>
+          <DisponibilidadeEquipe />
+        </details>
+      ) : null}
     </AppShell>
   );
 }
@@ -140,7 +192,11 @@ function DisponibilidadeEquipe() {
   const hoje = hojeIso();
   const proximos = d.eventos.filter((e) => e.date >= hoje).slice(0, 4);
   const mins = d.global ? d.ministerios : d.ministerios.filter((m) => d.lidero.has(m.id));
-  const ids = [...new Set(d.membros.filter((m) => mins.some((x) => x.id === m.ministry_id)).map((m) => m.user_id))];
+  const ids = [
+    ...new Set(
+      d.membros.filter((m) => mins.some((x) => x.id === m.ministry_id)).map((m) => m.user_id),
+    ),
+  ];
   const q = useQuery({
     queryKey: ["libens", "disp-equipe", ids.join(",")],
     queryFn: () => listarDisponibilidade(ids),
@@ -156,8 +212,12 @@ function DisponibilidadeEquipe() {
   };
   return (
     <section className="mt-6 space-y-3">
-      <h2 className="text-sm font-semibold text-muted-foreground">Disponibilidade da equipe (somente leitura)</h2>
-      {proximos.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum evento futuro.</p> : null}
+      <h2 className="text-sm font-semibold text-muted-foreground">
+        Disponibilidade da equipe (somente leitura)
+      </h2>
+      {proximos.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Nenhum evento futuro.</p>
+      ) : null}
       {mins.map((m) => {
         const membros = d.membros.filter((x) => x.ministry_id === m.id);
         if (membros.length === 0 || proximos.length === 0) return null;
@@ -172,8 +232,20 @@ function DisponibilidadeEquipe() {
                     const v = st(x.user_id, e.date);
                     return (
                       <p key={e.id} className="flex justify-between gap-2 pl-3 text-xs">
-                        <span className="capitalize text-muted-foreground">{curto(e.date)} · {e.name}</span>
-                        <span className={v === "Disponível" ? "text-success" : v === "Indisponível" ? "text-destructive" : "text-muted-foreground"}>{v}</span>
+                        <span className="capitalize text-muted-foreground">
+                          {curto(e.date)} · {e.name}
+                        </span>
+                        <span
+                          className={
+                            v === "Disponível"
+                              ? "text-success"
+                              : v === "Indisponível"
+                                ? "text-destructive"
+                                : "text-muted-foreground"
+                          }
+                        >
+                          {v}
+                        </span>
                       </p>
                     );
                   })}

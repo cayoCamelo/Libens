@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   Settings2,
   User,
-  Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -25,7 +24,6 @@ const disponibilidade: ItemNav = {
   to: "/app/disponibilidade",
   icone: CalendarCheck,
 };
-const servosItem: ItemNav = { rotulo: "Servos", to: "/app/servos", icone: Users };
 const ministerios: ItemNav = { rotulo: "Ministérios", to: "/app/ministerios", icone: Church };
 const perfilItem: ItemNav = { rotulo: "Perfil", to: "/app/perfil", icone: User };
 const painel: ItemNav = { rotulo: "Painel", to: "/app/painel", icone: LayoutDashboard };
@@ -34,23 +32,13 @@ const admin: ItemNav = { rotulo: "Administração", to: "/app/admin", icone: Set
 export const navPorPerfil: Record<Perfil, ItemNav[]> = {
   servo: [inicio, escalas, disponibilidade, perfilItem],
   lider: [inicio, escalas, disponibilidade, perfilItem],
-  pastor: [
-    inicio,
-    escalas,
-    disponibilidade,
-    ministerios,
-    { ...painel, rotulo: "Painel pastoral" },
-    servosItem,
-    perfilItem,
-  ],
+  pastor: [{ ...painel, rotulo: "Painel pastoral" }, perfilItem],
   admin: [
-    inicio,
+    { ...painel, rotulo: "Painel principal" },
     escalas,
     disponibilidade,
     ministerios,
-    { ...painel, rotulo: "Painel administrativo" },
-    { ...admin, rotulo: "Usuários e acessos" },
-    servosItem,
+    { ...admin, rotulo: "Acessos" },
     perfilItem,
   ],
 };

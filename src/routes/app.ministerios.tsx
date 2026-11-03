@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { DetalheMinisterio } from "@/components/detalhe-ministerio";
+import { createFileRoute } from "@tanstack/react-router";
 import { ChevronRight, Plus } from "lucide-react";
 import { useState } from "react";
 
@@ -9,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { traduzirErroDb } from "@/lib/dados";
-import { useSessao } from "@/lib/perfil-context";
 import { useDados } from "@/lib/use-dados";
 
 export const Route = createFileRoute("/app/ministerios")({
@@ -26,9 +26,9 @@ export const Route = createFileRoute("/app/ministerios")({
   component: MinisteriosPage,
 });
 
-function MinisteriosPage() {
+export function MinisteriosPage() {
+  const [detalhe, setDetalhe] = useState<string | null>(null);
   const d = useDados();
-  const { perfil } = useSessao();
   const [criando, setCriando] = useState(false);
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
@@ -57,6 +57,7 @@ function MinisteriosPage() {
       </AppShell>
     );
 
+  if (detalhe) return <DetalheMinisterio id={detalhe} onVoltar={() => setDetalhe(null)} />;
   return (
     <AppShell
       titulo="Ministérios"
@@ -101,7 +102,12 @@ function MinisteriosPage() {
           const membros = d.membros.filter((x) => x.ministry_id === m.id);
           const lideres = d.lideres.filter((x) => x.ministry_id === m.id);
           return (
-            <Link key={m.id} to="/app/ministerios/$id" params={{ id: m.id }} className="block">
+            <button
+              type="button"
+              key={m.id}
+              onClick={() => setDetalhe(m.id)}
+              className="block w-full text-left"
+            >
               <div className="grid min-h-20 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-4 hover:bg-accent/30">
                 <div className="min-w-0">
                   <p className="break-words text-sm font-semibold">{m.name}</p>
@@ -115,7 +121,7 @@ function MinisteriosPage() {
                   <ChevronRight className="h-4 w-4" />
                 </span>
               </div>
-            </Link>
+            </button>
           );
         })}
         {!d.carregando && visiveis.length === 0 ? (

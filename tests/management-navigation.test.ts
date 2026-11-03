@@ -8,13 +8,17 @@ test("servo e líder têm quatro abas sem gestão de ministérios", () => {
       ["/app/inicio", "/app/escalas", "/app/disponibilidade", "/app/perfil"],
     );
 });
-test("pastor e admin acessam ministérios e painéis, somente admin tem usuários e acessos", () => {
-  for (const role of ["pastor", "admin"] as const) {
-    assert(navPorPerfil[role].some((n) => n.to === "/app/ministerios"));
-    assert(navPorPerfil[role].some((n) => n.to === "/app/painel"));
-  }
-  assert(!navPorPerfil.pastor.some((n) => n.to === "/app/admin"));
-  assert(navPorPerfil.admin.some((n) => n.to === "/app/admin"));
+test("admin tem seis destinos na ordem aprovada e pastor usa página única", () => {
+  assert.deepEqual(
+    navPorPerfil.admin.map((n) => n.rotulo),
+    ["Painel principal", "Escalas", "Disponibilidade", "Ministérios", "Acessos", "Perfil"],
+  );
+  assert.deepEqual(
+    navPorPerfil.pastor.map((n) => n.to),
+    ["/app/painel", "/app/perfil"],
+  );
+  for (const role of ["pastor", "admin"] as const)
+    assert(!navPorPerfil[role].some((n) => n.to === "/app/inicio" || n.to === "/app/servos"));
 });
 test("navegação sem caminhos duplicados", () => {
   for (const items of Object.values(navPorPerfil)) {
