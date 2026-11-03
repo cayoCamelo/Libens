@@ -14,3 +14,4 @@
 - Keep avatars in private storage with expiring signed links; update profile references before deleting prior files.
 - Delete events only through explicit confirmation and preserve foreign-key restrictions to protect linked schedules.
 - Use the existing notifications table and scheduled reminder function; never create a parallel notification system.
+- Share the event editor between Eventos and Escalas dialogs; keep schedule-view filtering and permission gates in browser-safe pure helpers with regression tests, while RLS remains authoritative.
