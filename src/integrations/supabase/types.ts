@@ -589,6 +589,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      month_schedule_context: { Args: { _ministry_id: string }; Returns: Json }
+      save_month_schedule: { Args: { _ministry_id: string; _month: string; _plan: Json; _publish: boolean }; Returns: number }
       list_people: {
         Args: Record<PropertyKey, never>
         Returns: { id: string; full_name: string; email: string; phone: string | null; role: Database["public"]["Enums"]["app_role"]; active: boolean; created_at: string }[]
