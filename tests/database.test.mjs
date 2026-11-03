@@ -94,6 +94,37 @@ test('SQL: permissões, privacidade, contas inativas, transação e trocas', asy
       await assert.rejects(q('SELECT decide_substitution($1,true)',[rid]),/disponibilidade/);
       assert.equal((await q('SELECT status FROM schedules WHERE id=$1',[sid])).rows[0].status,'scheduled');
     });
+    await t.test('mensal: permissões, vagas, revisão manual, preservação e rollback',async()=>{
+      await session('postgres');
+      const ma=id(300),mb=id(301);
+      await q("INSERT INTO events(id,name,date,start_time,end_time) VALUES ($1,'Mensal A',(date_trunc('month',now() AT TIME ZONE 'America/Fortaleza')+interval '1 month'-interval '1 day')::date,'23:59:00','01:00:00'),($2,'Mensal B',(date_trunc('month',now() AT TIME ZONE 'America/Fortaleza')+interval '1 month'-interval '1 day')::date,'23:59:30','01:00:00')",[ma,mb]);
+      const month=(await q("SELECT date_trunc('month',now() AT TIME ZONE 'America/Fortaleza')::date::text AS month")).rows[0].month;
+      const date=(await q('SELECT date::text AS date FROM events WHERE id=$1',[ma])).rows[0].date;
+      await q('INSERT INTO availability(user_id,date,available) VALUES ($1,$2,true)',[id(3),date]);
+      await session('anon');await assert.rejects(q('SELECT month_schedule_context($1)',[mid]),/permission denied/);
+      await session('authenticated',id(5));await assert.rejects(q('SELECT month_schedule_context($1)',[mid]),/não gerencia/);
+      await session('authenticated',id(2));
+      const ctx=(await q('SELECT month_schedule_context($1) AS ctx',[mid])).rows[0].ctx;
+      assert.equal(ctx.month,month);assert.equal(ctx.events.some(e=>e.id===ma),true);
+      assert.equal(ctx.people.some(p=>p.id===id(6)),false);
+      let plan=[{event_id:ma,required_count:2,existing_ids:[],selections:[{user_id:id(3),manual_confirmed:false}],confirmed_existing:[]}];
+      await assert.rejects(q('SELECT save_month_schedule($1,$2,$3,true)',[mid,month,JSON.stringify(plan)]),/pendentes/);
+      await q('SELECT save_month_schedule($1,$2,$3,false)',[mid,month,JSON.stringify(plan)]);
+      const saved=(await q('SELECT id,status FROM schedules WHERE event_id=$1',[ma])).rows[0];assert.equal(saved.status,'draft');
+      await assert.rejects(q('SELECT save_month_schedule($1,$2,$3,false)',[mid,month,JSON.stringify(plan)]),/outro gestor/);
+      plan=[{event_id:ma,required_count:2,existing_ids:[saved.id],selections:[{user_id:id(4),manual_confirmed:false}],confirmed_existing:[]}];
+      await assert.rejects(q('SELECT save_month_schedule($1,$2,$3,true)',[mid,month,JSON.stringify(plan)]),/Confirme/);
+      // A segunda linha conflita com a primeira: a gravação do mês inteiro deve reverter.
+      plan[0].selections[0].manual_confirmed=true;
+      const conflict=[...plan,{event_id:mb,required_count:1,existing_ids:[],selections:[{user_id:id(4),manual_confirmed:true}],confirmed_existing:[]}];
+      await assert.rejects(q('SELECT save_month_schedule($1,$2,$3,true)',[mid,month,JSON.stringify(conflict)]),/conflitante/);
+      assert.equal((await q('SELECT count(*)::int AS n FROM schedules WHERE event_id=$1',[ma])).rows[0].n,1);
+      assert.equal((await q('SELECT status FROM schedules WHERE id=$1',[saved.id])).rows[0].status,'draft');
+      await q('SELECT save_month_schedule($1,$2,$3,true)',[mid,month,JSON.stringify(plan)]);
+      assert.equal((await q("SELECT count(*)::int AS n FROM schedules WHERE event_id=$1 AND status='scheduled'",[ma])).rows[0].n,2);
+      assert.equal((await q('SELECT id FROM schedules WHERE id=$1',[saved.id])).rows[0].id,saved.id);
+      await session('authenticated',id(6));await assert.rejects(q('SELECT month_schedule_context($1)',[mid]),/conta ativa/);
+    });
     await t.test('bucket privado limita tipo e fotos de outros ministérios',async()=>{
       await session('postgres');
       await q("INSERT INTO storage.objects(bucket_id,name) VALUES ('avatars',$1)",[`${id(3)}/foto.png`]);

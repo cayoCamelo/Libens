@@ -64,6 +64,13 @@
       "when": 1793640154545,
       "tag": "0008_restrict_profile_contacts",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793667594580,
+      "tag": "0009_monthly_schedules",
+      "breakpoints": true
     }
   ]
 }

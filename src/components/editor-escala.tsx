@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
+import { EditorEscalaMensal } from "@/components/editor-escala-mensal";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -32,6 +34,7 @@ export function EditorEscala({
 }) {
   const { usuario } = useSessao();
   const d = useDados();
+  const [modo, setModo] = useState("single");
   const [eventId, setEventId] = useState("");
   const [ministryId, setMinistryId] = useState("");
   const [qtd, setQtd] = useState(0);
@@ -66,6 +69,7 @@ export function EditorEscala({
   // Reinicia ao abrir
   useEffect(() => {
     if (!aberto) return;
+    setModo("single");
     setEventId(inicial?.eventId ?? "");
     setMinistryId(inicial?.ministryId ?? "");
     setIndic(null);
@@ -140,7 +144,10 @@ export function EditorEscala({
         <DialogHeader>
           <DialogTitle>{existentes.length ? "Editar escala" : "Criar escala"}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        {!inicial ? <Tabs value={modo} onValueChange={setModo}>
+          <TabsList className="grid w-full grid-cols-2"><TabsTrigger value="single">Um evento</TabsTrigger><TabsTrigger value="month">Mês atual</TabsTrigger></TabsList>
+        </Tabs> : null}
+        {modo === "month" && !inicial ? <EditorEscalaMensal onFechar={onFechar}/> : <div className="space-y-4">
           <div className="space-y-1.5">
             <Label>Evento</Label>
             <Select value={eventId} onValueChange={setEventId}>
@@ -238,7 +245,7 @@ export function EditorEscala({
               </div>
             </>
           ) : null}
-        </div>
+        </div>}
       </DialogContent>
     </Dialog>
   );

@@ -23,7 +23,7 @@ export interface ResultadoGeracao {
 
 const contaHistorico = (s: EscalaDb) => ["scheduled", "confirmed", "completed"].includes(s.status);
 
-function intervalo(evento: EventoDb) {
+function intervalo(evento: Pick<EventoDb, "date" | "start_time" | "end_time">) {
   const inicio = Date.parse(`${evento.date}T${evento.start_time}-03:00`);
   let fim = evento.end_time
     ? Date.parse(`${evento.date}T${evento.end_time}-03:00`)
@@ -33,7 +33,7 @@ function intervalo(evento: EventoDb) {
   return { inicio, fim };
 }
 
-export function horariosConflitam(a: EventoDb, b: EventoDb) {
+export function horariosConflitam(a: Pick<EventoDb, "date" | "start_time" | "end_time">, b: Pick<EventoDb, "date" | "start_time" | "end_time">) {
   const ai = intervalo(a);
   const bi = intervalo(b);
   return ai.inicio < bi.fim && bi.inicio < ai.fim;
