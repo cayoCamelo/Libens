@@ -3,8 +3,8 @@ import { ChevronRight, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { AppShell } from "@/components/layout/app-shell";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { dataBr, rotulosPerfil } from "@/lib/dados";
@@ -33,6 +33,9 @@ function ServosPage() {
   const [funcao, setFuncao] = useState("todas");
   const [ministerio, setMinisterio] = useState("todos");
   const [status, setStatus] = useState("todos");
+  const [filtros,setFiltros]=useState(false);
+  const [selecionado,setSelecionado]=useState<string|null>(null);
+  const pessoa=d.pessoas.find(p=>p.id===selecionado);
 
   const nomeMin = (id: string) => d.ministerios.find((m) => m.id === id)?.name ?? "";
 
@@ -73,7 +76,8 @@ function ServosPage() {
             aria-label="Pesquisar"
           />
         </div>
-        <div className="grid grid-cols-3 gap-2">
+        <Button variant="ghost" aria-expanded={filtros} aria-controls="filtros-servos" onClick={()=>setFiltros(!filtros)}>Filtros{[funcao!=="todas",ministerio!=="todos",status!=="todos"].filter(Boolean).length ? " · ativos" : ""}</Button>
+        {filtros ? <div id="filtros-servos" className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           <Select value={funcao} onValueChange={setFuncao}>
             <SelectTrigger aria-label="Função"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -100,49 +104,15 @@ function ServosPage() {
               <SelectItem value="inativo">Inativo</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </div>:null}
       </div>
 
       {d.carregando ? <p className="text-sm text-muted-foreground">Carregando...</p> : null}
-      <div className="space-y-3">
-        {lista.map((p) => {
-          const mins = d.membros.filter((m) => m.user_id === p.id).map((m) => m.ministry_id);
-          const lid = d.lideres.filter((m) => m.user_id === p.id).map((m) => m.ministry_id);
-          return (
-            <Link key={p.id} to="/app/servos/$id" params={{ id: p.id }} className="block">
-              <Card className="transition-colors hover:bg-accent/40">
-                <CardContent className="space-y-2 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate font-medium text-foreground">{p.full_name || p.email}</p>
-                      <p className="truncate text-sm text-muted-foreground">{p.email}</p>
-                      {p.phone ? <p className="text-sm text-muted-foreground">{p.phone}</p> : null}
-                    </div>
-                    <div className="flex shrink-0 items-center gap-1.5">
-                      <Badge variant={p.active ? "outline" : "secondary"}>{p.active ? "Ativo" : "Inativo"}</Badge>
-                      <Badge variant="outline">{rotulosPerfil[p.role]}</Badge>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {mins.map((id) => (
-                      <Badge key={id} variant="secondary">
-                        {nomeMin(id)}
-                        {lid.includes(id) ? " · líder" : ""}
-                      </Badge>
-                    ))}
-                    {mins.length === 0 ? <span className="text-xs text-muted-foreground">Sem ministério</span> : null}
-                  </div>
-                  <p className="text-xs text-muted-foreground">Cadastro em {dataBr(p.created_at)}</p>
-                </CardContent>
-              </Card>
-            </Link>
-          );
-        })}
-        {!d.carregando && lista.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhuma pessoa encontrada.</p>
-        ) : null}
+      <div className="divide-y divide-border border-y border-border">
+        {lista.map(p=><Button key={p.id} variant="ghost" className="grid h-auto min-h-16 w-full grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-none px-0 py-3 text-left whitespace-normal" onClick={()=>setSelecionado(p.id)}><span className="min-w-0"><span className="block break-words text-sm font-medium">{p.full_name||p.email}</span><span className="block text-xs font-normal text-muted-foreground">{rotulosPerfil[p.role]} · {d.membros.filter(m=>m.user_id===p.id).map(m=>nomeMin(m.ministry_id)).join(' · ')||'Sem ministério'}</span></span><span className="flex items-center gap-1 text-xs text-muted-foreground">{p.active?'Ativo':'Inativo'}<ChevronRight className="h-4 w-4"/></span></Button>)}
+        {!d.carregando&&!lista.length?<p className="py-4 text-sm text-muted-foreground">Nenhuma pessoa encontrada.</p>:null}
       </div>
+      <Dialog open={!!pessoa} onOpenChange={o=>!o&&setSelecionado(null)}><DialogContent className="w-[calc(100%-1rem)]"><DialogHeader><DialogTitle>{pessoa?.full_name}</DialogTitle><DialogDescription>{pessoa?rotulosPerfil[pessoa.role]:''}</DialogDescription></DialogHeader><p className="break-all text-sm">{pessoa?.email}</p>{pessoa?.phone?<p className="text-sm">{pessoa.phone}</p>:null}<p className="text-sm text-muted-foreground">Cadastro em {pessoa?dataBr(pessoa.created_at):''}</p><Button asChild><Link to="/app/servos/$id" params={{id:pessoa?.id??''}}>Abrir cadastro completo</Link></Button></DialogContent></Dialog>
     </AppShell>
   );
 }

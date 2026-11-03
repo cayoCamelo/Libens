@@ -80,7 +80,8 @@ function EventosPage() {
 
   return (
     <AppShell titulo="Eventos" descricao="Programação">
-      <Card className="mb-4">
+      {podeCriar?<Button className="mb-4" onClick={()=>abrir()}><Plus className="h-4 w-4"/>Novo evento</Button>:null}
+      <details className="mb-4"><summary className="cursor-pointer py-3 text-sm text-muted-foreground">Eventos padrão e geração automática</summary><Card>
         <CardContent className="space-y-2 p-4">
           <p className="text-sm font-semibold text-foreground">Eventos padrão</p>
           {(modelos.data ?? []).map((t) => (
@@ -100,7 +101,7 @@ function EventosPage() {
           ) : null}
           {aviso ? <p className="text-xs text-muted-foreground">{aviso}</p> : null}
         </CardContent>
-      </Card>
+      </Card></details>
       <Select value={filtroStatus} onValueChange={setFiltroStatus}>
         <SelectTrigger className="mb-3 w-full sm:w-60" aria-label="Status"><SelectValue /></SelectTrigger>
         <SelectContent><SelectItem value="todos">Todos os status</SelectItem>{Object.entries(rotuloEventoStatus).map(([v,l])=><SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
@@ -109,8 +110,8 @@ function EventosPage() {
         {d.eventos.filter((e)=>filtroStatus==="todos"||e.status===filtroStatus).map((e) => {
           const needs = d.necessidades.filter((n) => n.event_id === e.id);
           return (
-            <Card key={e.id}>
-              <CardContent className="space-y-1 p-4">
+            <Card key={e.id} className="rounded-none border-0 border-b bg-transparent shadow-none">
+              <CardContent className="space-y-1 px-0 py-4">
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {formatarData(e.date)} · {hora(e.start_time)}{e.end_time ? `–${hora(e.end_time)}` : ""}
                 </p>

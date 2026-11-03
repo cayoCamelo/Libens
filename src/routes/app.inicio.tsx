@@ -2,6 +2,7 @@ import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarCheck, ChevronRight } from "lucide-react";
 
+import { GestaoDashboard } from "@/components/gestao-dashboard";
 import { AppShell } from "@/components/layout/app-shell";
 import { useNotificacoes } from "@/components/sino-notificacoes";
 import { Badge } from "@/components/ui/badge";
@@ -49,6 +50,7 @@ function InicioPage() {
   const dispMes = (disp.data ?? []).filter((x) => x.date.startsWith(mes));
 
   if (perfil === "admin") return <Navigate to="/app/painel" replace />;
+  if (perfil === "pastor") return <GestaoDashboard tipo="pastor" />;
 
   return (
     <AppShell titulo={`Olá, ${primeiroNome}`} descricao="Acompanhe o que vem por aí">

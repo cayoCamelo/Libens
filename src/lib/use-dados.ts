@@ -42,7 +42,7 @@ export function useDados() {
       erro: [ministerios, pessoas, membros, lideres, eventos, escalas, necessidades].find((q) => q.error)
         ?.error as Error | undefined,
       ministerios: ministerios.data ?? [],
-      pessoas: pessoas.data ?? [],
+      pessoas: (pessoas.data ?? []).filter((p) => !p.deleted_at),
       membros: membros.data ?? [],
       lideres: lideres.data ?? [],
       eventos: eventos.data ?? [],

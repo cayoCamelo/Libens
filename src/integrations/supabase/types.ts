@@ -313,6 +313,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          deleted_at: string | null
+          deleted_by: string | null
           active: boolean
           avatar_url: string | null
           bio: string | null
@@ -327,6 +329,8 @@ export type Database = {
           whatsapp: string | null
         }
         Insert: {
+          deleted_at?: string | null
+          deleted_by?: string | null
           active?: boolean
           avatar_url?: string | null
           bio?: string | null
@@ -341,6 +345,8 @@ export type Database = {
           whatsapp?: string | null
         }
         Update: {
+          deleted_at?: string | null
+          deleted_by?: string | null
           active?: boolean
           avatar_url?: string | null
           bio?: string | null
@@ -589,6 +595,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      delete_servo: { Args: { _uid: string; _confirmation: string }; Returns: undefined }
       _evento_aberto: { Args: { _eid: string }; Returns: undefined }
       _notify: {
         Args: {
@@ -640,11 +647,12 @@ export type Database = {
         Args: never
         Returns: {
           active: boolean
+          deleted_at: string | null
           created_at: string
           email: string
           full_name: string
           id: string
-          phone: string
+          phone: string | null
           role: Database["public"]["Enums"]["app_role"]
         }[]
       }

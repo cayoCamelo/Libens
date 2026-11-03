@@ -130,7 +130,7 @@ function DisponibilidadePage() {
           </div>
         </CardContent>
       </Card>
-      {consultaveis.length > 0 ? <DisponibilidadeEquipe /> : null}
+      {consultaveis.length > 0 ? <details className="mt-5"><summary className="cursor-pointer py-3 text-sm font-medium">Consultar disponibilidade da equipe</summary><DisponibilidadeEquipe /></details> : null}
     </AppShell>
   );
 }

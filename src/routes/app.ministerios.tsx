@@ -1,11 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ChevronRight, Crown, Plus } from "lucide-react";
+import { ChevronRight, Plus } from "lucide-react";
 import { useState } from "react";
 
 import { AppShell } from "@/components/layout/app-shell";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
@@ -50,48 +49,15 @@ function MinisteriosPage() {
   return (
     <AppShell titulo="Ministérios" descricao={d.global ? "Todos os ministérios" : "Seus ministérios"}>
       {erro ? <p className="mb-3 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{erro}</p> : null}
-      {perfil === "admin" ? (
-        criando ? (
-          <Card className="mb-4">
-            <CardContent className="space-y-3 p-4">
-              <Input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome do ministério" aria-label="Nome" />
-              <Textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="Descrição (opcional)" aria-label="Descrição" />
-              <div className="flex gap-2">
-                <Button onClick={() => void criar()}>Criar</Button>
-                <Button variant="ghost" onClick={() => setCriando(false)}>Cancelar</Button>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <Button className="mb-4" onClick={() => setCriando(true)}><Plus className="h-4 w-4" /> Novo ministério</Button>
-        )
-      ) : null}
-      <div className="space-y-3">
+      {perfil==='admin'?<Button className="mb-4" onClick={()=>setCriando(true)}><Plus className="h-4 w-4"/>Novo ministério</Button>:null}
+      <Dialog open={criando} onOpenChange={setCriando}><DialogContent><DialogHeader><DialogTitle>Novo ministério</DialogTitle></DialogHeader><Input aria-label="Nome do ministério" placeholder="Nome" value={nome} onChange={e=>setNome(e.target.value)}/><Textarea aria-label="Descrição do ministério" placeholder="Descrição" value={descricao} onChange={e=>setDescricao(e.target.value)}/>{erro?<p role="alert" className="text-sm text-destructive">{erro}</p>:null}<Button onClick={()=>void criar()}>Criar ministério</Button></DialogContent></Dialog>
+      <div className="divide-y divide-border border-y border-border">
         {visiveis.map((m) => {
           const membros = d.membros.filter((x) => x.ministry_id === m.id);
           const lideres = d.lideres.filter((x) => x.ministry_id === m.id);
           return (
             <Link key={m.id} to="/app/ministerios/$id" params={{ id: m.id }} className="block">
-              <Card className="transition-colors hover:bg-accent/40">
-                <CardContent className="space-y-2 p-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-semibold text-foreground">{m.name}</p>
-                    <div className="flex items-center gap-1.5">
-                      {!m.active ? <Badge variant="secondary">Inativo</Badge> : null}
-                      <span className="text-xs text-muted-foreground">{membros.length} membros</span>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                  </div>
-                  {d.participo.has(m.id) ? <p className="text-xs text-muted-foreground">Você participa deste ministério.</p> : null}
-                  {m.description ? <p className="text-sm text-muted-foreground">{m.description}</p> : null}
-                  <div className="flex flex-wrap gap-1.5">
-                    {lideres.length === 0 ? <span className="text-xs text-muted-foreground">Sem líder</span> : null}
-                    {lideres.map((l) => (
-                      <Badge key={l.id} className="gap-1"><Crown className="h-3 w-3" /> {d.nomePessoa(l.user_id)}</Badge>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="grid min-h-20 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-4 hover:bg-accent/30"><div className="min-w-0"><p className="break-words text-sm font-semibold">{m.name}</p><p className="text-xs text-muted-foreground">{membros.length} membros · {lideres.map(l=>d.nomePessoa(l.user_id)).join(', ')||'Sem líder'}</p></div><span className="flex items-center gap-2 text-xs text-muted-foreground">{!m.active?'Inativo':null}<ChevronRight className="h-4 w-4"/></span></div>
             </Link>
           );
         })}

@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { ExcluirServo } from "@/components/excluir-servo";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Lock } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -31,6 +32,7 @@ export const Route = createFileRoute("/app/servos_/$id")({
 
 function DetalheServo() {
   const { id } = Route.useParams();
+  const navigate=useNavigate();
   const { perfil, usuario } = useSessao();
   const d = useDados();
   const p = d.pessoas.find((x) => x.id === id);
@@ -83,6 +85,7 @@ function DetalheServo() {
   return (
     <AppShell titulo={p.full_name || p.email} descricao={rotulosPerfil[p.role]}>
       {voltar}
+      <div className="mb-3"><ExcluirServo pessoa={p} onExcluido={()=>void navigate({to:"/app/servos"})}/></div>
       {msg ? (
         <p className={`mb-3 rounded-lg p-3 text-sm ${msg.tipo === "erro" ? "bg-destructive/10 text-destructive" : "bg-success/10 text-success"}`}>
           {msg.texto}

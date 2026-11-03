@@ -78,6 +78,13 @@
       "when": 1793676428751,
       "tag": "0010_notification_delivery_copy",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1793678431281,
+      "tag": "0011_separated_management_delete_member",
+      "breakpoints": true
     }
   ]
 }

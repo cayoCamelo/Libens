@@ -167,6 +167,35 @@ test('SQL: permissões, privacidade, contas inativas, transação e trocas', asy
       assert.equal((await q("SELECT count(*)::int n FROM notifications WHERE user_id=$1",[id(6)])).rows[0].n,0);
       for(const fn of ['private.notification_copy()','private.notify_schedule_published()','public.process_schedule_reminders()']) assert.equal((await q("SELECT has_function_privilege('authenticated',$1,'EXECUTE') allowed",[fn])).rows[0].allowed,false);
     });
+    await t.test('exclusão de servo: somente admin, confirmação, histórico e bloqueio de acesso',async()=>{
+      await session('postgres');
+      await q("INSERT INTO auth.users(id,email) VALUES ($1,'exclusao@example.invalid'),($2,'pastor@example.invalid')",[id(7),id(8)]);
+      await q("UPDATE profiles SET role='pastor' WHERE id=$1",[id(8)]);
+      await q('INSERT INTO user_ministries(user_id,ministry_id) VALUES($1,$2)',[id(7),mid]);
+      const future=id(501),past=id(502);
+      await q("INSERT INTO events(id,name,date,start_time,end_time) VALUES($1,'Futuro','2099-12-01','19:00','21:00'),($2,'Histórico','2098-01-01','19:00','21:00')",[future,past]);
+      await q("INSERT INTO schedules(user_id,ministry_id,event_id,status) VALUES($1,$2,$3,'scheduled'),($1,$2,$4,'scheduled')",[id(7),mid,future,past]);
+      await q("UPDATE schedules SET status='completed' WHERE user_id=$1 AND event_id=$2",[id(7),past]);
+      await q("UPDATE events SET date='2000-01-01' WHERE id=$1",[past]);
+      await session('anon');await assert.rejects(q('SELECT delete_servo($1,$2)',[id(7),'EXCLUIR']),/permission denied/);
+      for(const uid of [id(2),id(8),id(3)]){
+       await session('authenticated',uid);await assert.rejects(q('SELECT delete_servo($1,$2)',[id(7),'EXCLUIR']),/Somente o administrador/);
+      }
+      await session('authenticated',id(1));
+      await assert.rejects(q('SELECT delete_servo($1,$2)',[id(7),'']),/Confirme/);
+      await assert.rejects(q('SELECT delete_servo($1,$2)',[id(1),'EXCLUIR']),/Confirme/);
+      await assert.rejects(q('SELECT delete_servo($1,$2)',[id(2),'EXCLUIR']),/apenas servos/);
+      await q('SELECT delete_servo($1,$2)',[id(7),'EXCLUIR']);
+      const removed=(await q('SELECT * FROM list_people() WHERE id=$1',[id(7)])).rows[0];assert.equal(removed.active,false);assert.ok(removed.deleted_at);
+      await assert.rejects(q('UPDATE profiles SET active=true WHERE id=$1',[id(7)]),/não pode ser reativado/);
+      await session('postgres');
+      assert.equal((await q('SELECT count(*)::int n FROM user_ministries WHERE user_id=$1',[id(7)])).rows[0].n,0);
+      assert.equal((await q('SELECT status FROM schedules WHERE user_id=$1 AND event_id=$2',[id(7),future])).rows[0].status,'cancelled');
+      assert.equal((await q('SELECT status FROM schedules WHERE user_id=$1 AND event_id=$2',[id(7),past])).rows[0].status,'completed');
+      assert.equal((await q('SELECT count(*)::int n FROM auth.users WHERE id=$1',[id(7)])).rows[0].n,1);
+      await session('authenticated',id(7));
+      await assert.rejects(q('SELECT save_schedule($1,$2,$3,true,1)',[future,mid,[id(7)]]),/conta ativa/);
+    });
     await t.test('bucket privado limita tipo e fotos de outros ministérios',async()=>{
       await session('postgres');
       await q("INSERT INTO storage.objects(bucket_id,name) VALUES ('avatars',$1)",[`${id(3)}/foto.png`]);

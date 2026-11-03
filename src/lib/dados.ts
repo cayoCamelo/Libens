@@ -7,6 +7,7 @@ import type { Perfil } from "@/types/libens";
 
 export interface MinisterioDb { id: string; name: string; description: string | null; active: boolean }
 export interface PessoaDb {
+  deleted_at?: string | null;
   id: string; full_name: string; email: string; phone: string | null; role: Perfil; active: boolean; created_at: string;
 }
 

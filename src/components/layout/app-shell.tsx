@@ -1,8 +1,9 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { LibensLogo } from "@/components/libens-logo";
-import { LogOut, Moon, Sun } from "lucide-react";
+import { LogOut, Moon, Sun, MoreHorizontal } from "lucide-react";
 import { navPorPerfil } from "@/components/layout/nav-config";
 import { SinoNotificacoes } from "@/components/sino-notificacoes";
 import { useAvatarUrl, useMeuPerfilExtra } from "@/lib/avatar";
@@ -134,30 +135,13 @@ export function AppShell({
           </div>
         </header>
 
-        <main className="mx-auto max-w-3xl px-4 pt-5 pb-28 md:px-8 md:pb-10">{children}</main>
+        <main className={cn("mx-auto px-4 pt-5 pb-28 md:px-8 md:pb-10", perfil==="admin"||perfil==="pastor"?"max-w-5xl":"max-w-3xl")}>{children}</main>
       </div>
 
-      {/* Navegação inferior (celular) */}
-      <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-card/95 backdrop-blur md:hidden">
+      <nav aria-label="Navegação do aplicativo" className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-card/95 backdrop-blur md:hidden">
         <ul className="flex items-stretch">
-          {itens.map((item) => {
-            const ativo = pathname === item.to;
-            return (
-              <li key={item.to} className="flex-1">
-                <Link
-                  to={item.to}
-                  aria-current={ativo ? "page" : undefined}
-                  className={cn(
-                    "flex flex-col items-center gap-1 px-1 py-2.5 text-[11px] font-medium transition-colors",
-                    ativo ? "text-primary" : "text-muted-foreground",
-                  )}
-                >
-                  <item.icone className="h-5 w-5" />
-                  <span className="w-full truncate text-center">{item.rotulo}</span>
-                </Link>
-              </li>
-            );
-          })}
+          {itens.slice(0,3).map(item=><li key={item.to} className="min-w-0 flex-1"><Link to={item.to} aria-current={pathname===item.to?'page':undefined} className={cn('flex min-h-16 flex-col items-center justify-center gap-1 px-1 py-2 text-[11px]',pathname===item.to?'text-primary':'text-muted-foreground')}><item.icone className="h-5 w-5"/><span className="w-full truncate text-center">{item.rotulo.startsWith('Visão')?'Painel':item.to==='/app/admin'?'Contas':item.rotulo}</span></Link></li>)}
+          <li className="min-w-0 flex-1"><DropdownMenu><DropdownMenuTrigger asChild><button type="button" className={cn('flex min-h-16 w-full flex-col items-center justify-center gap-1 px-1 py-2 text-[11px]',itens.slice(3).some(i=>i.to===pathname)?'text-primary':'text-muted-foreground')} aria-label="Mais páginas"><MoreHorizontal className="h-5 w-5"/><span>Mais</span></button></DropdownMenuTrigger><DropdownMenuContent side="top" align="end" className="mb-2 w-60 max-w-[calc(100vw-1rem)]">{itens.slice(3).map(item=><DropdownMenuItem key={item.to} asChild><Link to={item.to} className="min-h-11 gap-3" aria-current={pathname===item.to?'page':undefined}><item.icone className="h-4 w-4"/>{item.rotulo}</Link></DropdownMenuItem>)}</DropdownMenuContent></DropdownMenu></li>
         </ul>
       </nav>
     </div>
