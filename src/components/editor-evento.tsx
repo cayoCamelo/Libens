@@ -20,7 +20,7 @@ interface Form {
   needs: Record<string, number>;
 }
 
-export function EditorEvento({ aberto, evento, onFechar }: { aberto: boolean; evento?: EventoDb; onFechar: () => void }) {
+export function EditorEvento({ aberto, evento, onFechar }: { aberto: boolean; evento?: EventoDb | undefined; onFechar: () => void }) {
   const d = useDados();
   const { usuario } = useSessao();
   const podeCriar = d.global || d.lidero.size > 0;
