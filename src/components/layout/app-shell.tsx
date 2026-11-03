@@ -7,7 +7,7 @@ import { LibensLogo } from "@/components/libens-logo";
 import { LogOut, Moon, Sun } from "lucide-react";
 import { navPorPerfil } from "@/components/layout/nav-config";
 import { SinoNotificacoes } from "@/components/sino-notificacoes";
-import { useAvatarUrl, useMeuPerfilExtra } from "@/lib/avatar";
+import { iniciaisNome } from "@/lib/avatar";
 import { useSessao } from "@/lib/perfil-context";
 import { cn } from "@/lib/utils";
 import { CompletarCadastro } from "@/components/completar-cadastro";
@@ -28,8 +28,6 @@ export function AppShell({
   const pastoral = perfil === "pastor";
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [modoEscuro, setModoEscuro] = useState(false);
-  const extra = useMeuPerfilExtra(usuario.id);
-  const foto = useAvatarUrl(extra.data?.avatar_url);
 
   useEffect(() => {
     const escuro = localStorage.getItem("libens-tema") === "escuro";
@@ -166,13 +164,7 @@ export function AppShell({
                 aria-label="Meu perfil"
                 className="grid min-h-9 min-w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-secondary text-sm font-semibold text-secondary-foreground"
               >
-                {foto ? (
-                  <img src={foto} alt="" className="h-full w-full object-cover" />
-                ) : pastoral ? (
-                  "Perfil"
-                ) : (
-                  usuario.nome.charAt(0).toUpperCase()
-                )}
+                {pastoral ? "Perfil" : iniciaisNome(usuario.nome)}
               </Link>
             </div>
           </div>
