@@ -31,10 +31,10 @@ export async function fecharAvisos() {
   const list = await registration?.getNotifications();
   list?.filter((n) => n.tag.startsWith('libens-')).forEach((n) => n.close());
 }
-async function mostrarAviso(tag: string) {
+async function mostrarAviso(tag: string, title = 'Aviso de teste — Libens', body = 'Os avisos deste aparelho estão funcionando com o Libens aberto.') {
   const registration = await navigator.serviceWorker.getRegistration('/');
   if (!registration?.active) throw new Error('A instalação está sendo preparada. Aguarde e tente novamente.');
-  await registration.showNotification('Libens', { body: 'Você tem um novo aviso. Abra o Libens para consultar.', icon: '/libens-192.png', tag: `libens-${tag}` });
+  await registration.showNotification(title, { body, icon: '/libens-192.png', tag: `libens-${tag}` });
 }
 export function InstalarLibens() {
   const { usuario } = useSessao();
@@ -66,7 +66,7 @@ export function InstalarLibens() {
     <h2 className="font-semibold">Libens no celular</h2>
     <p className="text-sm text-muted-foreground">Instale para abrir pelo ícone do Libens na tela inicial. É necessário estar conectado à internet.</p>
     <Button className="min-h-11 w-full sm:w-auto" disabled={busy || installed} onClick={() => void instalar()}><Download className="h-4 w-4" />{installed ? 'Libens instalado' : 'Instalar Libens'}</Button>
-    <p className="text-sm text-muted-foreground">Avisos do celular: funcionam enquanto o Libens estiver aberto e em execução. Com o aplicativo fechado, o envio Web Push ainda não está disponível. A instalação não ativa permissões automaticamente.</p>
+    <p className="text-sm text-muted-foreground">Avisos do celular: funcionam enquanto o Libens estiver aberto e em execução. Com o aplicativo fechado, o envio Web Push ainda não está disponível. A instalação não ativa permissões automaticamente. Os avisos exibem data, horário, evento e ministério na tela do celular.</p>
     <div className="flex flex-wrap gap-2">
       {enabled ? <><Button variant="outline" onClick={() => void mostrarAviso('teste').catch(() => setMsg('Não foi possível exibir o teste. Verifique a permissão nas configurações do celular.'))}>Testar aviso</Button><Button variant="ghost" onClick={desativar}>Desativar neste aparelho</Button></> : <Button variant="outline" disabled={!supported} onClick={() => void ativar().catch(() => setMsg('Não foi possível ativar os avisos. Abra no navegador do celular e tente novamente.'))}><Bell className="h-4 w-4" />Ativar avisos com o app aberto</Button>}
     </div>
@@ -90,7 +90,7 @@ export function AvisosNoAparelho() {
     for (const n of q.data ?? []) {
       if (seen.has(n.id)) continue;
       seen.add(n.id);
-      if (!n.read_at && Date.parse(n.created_at) > since) void mostrarAviso(n.id).catch(() => {});
+      if (!n.read_at && Date.parse(n.created_at) > since) void mostrarAviso(n.id, `Libens · ${n.title}`, n.body ?? 'Abra o Libens para consultar os detalhes.').catch(() => {});
     }
   }, [q.data, enabled, seen, since]);
   return null;

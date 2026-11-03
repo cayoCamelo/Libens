@@ -21,7 +21,7 @@ export function useNotificacoes(intervalo = 5 * 60 * 1000) {
         .eq("user_id", usuario.id)
         .eq("channel", "app")
         .order("created_at", { ascending: false })
-        .limit(30);
+        .limit(200);
       if (error) throw new Error(error.message);
       return data ?? [];
     },

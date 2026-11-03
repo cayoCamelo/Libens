@@ -88,6 +88,8 @@ test('SQL: permissões, privacidade, contas inativas, transação e trocas', asy
       const sid=(await q('SELECT id FROM schedules WHERE event_id=$1 AND user_id=$2',[eid,id(3)])).rows[0].id;
       const rid=(await q('SELECT request_substitution($1,$2,NULL) AS id',[sid,id(4)])).rows[0].id;
       await session('authenticated',id(4));
+      const pedido=(await q("SELECT title,body FROM notifications WHERE type=$1",['troca_pedido:'+rid])).rows[0];
+      assert.equal(pedido.title,'Pedido de substituição');assert.match(pedido.body,/05\/11\/2099 às 19:00/);assert.match(pedido.body,/Pessoa 3 pediu sua ajuda/);
       await q('SELECT respond_substitution($1,true)',[rid]);
       await q("INSERT INTO availability(user_id,date,available) VALUES ($1,'2099-11-05',false)",[id(4)]);
       await session('authenticated',id(2));
@@ -124,6 +126,46 @@ test('SQL: permissões, privacidade, contas inativas, transação e trocas', asy
       assert.equal((await q("SELECT count(*)::int AS n FROM schedules WHERE event_id=$1 AND status='scheduled'",[ma])).rows[0].n,2);
       assert.equal((await q('SELECT id FROM schedules WHERE id=$1',[saved.id])).rows[0].id,saved.id);
       await session('authenticated',id(6));await assert.rejects(q('SELECT month_schedule_context($1)',[mid]),/conta ativa/);
+    });
+    await t.test('avisos: publicação, rascunho, horários exatos, preferências e duplicidade',async()=>{
+      await session('postgres');
+      const event24=id(400), event2=id(401), draft=id(402), short=id(403);
+      await q("INSERT INTO events(id,name,date,start_time,end_time) SELECT $1,'Culto de teste',(local_start)::date,local_start::time,(local_start+interval '1 hour')::time FROM (SELECT date_trunc('minute',now() AT TIME ZONE 'America/Fortaleza')+interval '24 hours'-interval '1 minute' local_start)x",[event24]);
+      await q("INSERT INTO events(id,name,date,start_time,end_time) SELECT $1,'Culto de teste',(local_start)::date,local_start::time,(local_start+interval '1 hour')::time FROM (SELECT date_trunc('minute',now() AT TIME ZONE 'America/Fortaleza')+interval '2 hours'-interval '1 minute' local_start)x",[event2]);
+      await q("INSERT INTO events(id,name,date,start_time,end_time) SELECT $1,'Culto de teste',(local_start)::date,local_start::time,(local_start+interval '1 hour')::time FROM (SELECT date_trunc('minute',now() AT TIME ZONE 'America/Fortaleza')+interval '30 minutes' local_start)x",[short]);
+      for(const eid of [event24,event2,short]) await q('INSERT INTO availability(user_id,date,available) SELECT $1,date,true FROM events WHERE id=$2 ON CONFLICT(user_id,date) DO UPDATE SET available=true',[id(3),eid]);
+      await session('authenticated',id(2));
+      await q('SELECT save_schedule($1,$2,$3,false,1)',[event24,mid,[id(3)]]);
+      assert.equal((await q("SELECT count(*)::int n FROM notifications WHERE event_id=$1",[event24])).rows[0].n,0);
+      await q('SELECT save_schedule($1,$2,$3,true,1)',[event24,mid,[id(3)]]);
+      await q('SELECT save_schedule($1,$2,$3,true,1)',[event24,mid,[id(3)]]);
+      await session('postgres');
+      let note=(await q("SELECT title,body FROM notifications WHERE event_id=$1 AND type='schedule_published'",[event24])).rows;
+      assert.equal(note.length,1);assert.equal(note[0].title,'Você foi escalado');assert.match(note[0].body,/Fortaleza/);assert.doesNotMatch(note[0].body,/amanhã/);
+      await q("INSERT INTO schedules(event_id,ministry_id,user_id,status) VALUES($1,$2,$3,'scheduled'),($4,$2,$3,'scheduled')",[event2,mid,id(3),short]);
+      await q('SELECT process_schedule_reminders()');await q('SELECT process_schedule_reminders()');
+      assert.equal((await q("SELECT count(*)::int n FROM notifications WHERE event_id=$1 AND type LIKE 'reminder_24h:%'",[event24])).rows[0].n,1);
+      assert.equal((await q("SELECT count(*)::int n FROM notifications WHERE event_id=$1 AND type LIKE 'reminder_2h:%'",[event2])).rows[0].n,1);
+      assert.equal((await q("SELECT count(*)::int n FROM notifications WHERE event_id=$1 AND type LIKE 'reminder_%'",[short])).rows[0].n,0);
+      note=(await q("SELECT body FROM notifications WHERE event_id=$1 AND type LIKE 'reminder_2h:%'",[event2])).rows[0];
+      const expected=(await q("SELECT to_char(date,'DD/MM/YYYY')||' às '||to_char(start_time,'HH24:MI') value FROM events WHERE id=$1",[event2])).rows[0].value;
+      assert.ok(note.body.startsWith(expected));assert.doesNotMatch(note.body,/em 2 horas|amanhã/);
+      // A changed event time gets a fresh reminder identity; inactive profiles are filtered.
+      await q("UPDATE events SET start_time=start_time-interval '1 minute' WHERE id=$1",[event2]);
+      await q('UPDATE profiles SET reminders_enabled=false WHERE id=$1',[id(3)]);
+      await q('SELECT process_schedule_reminders()');
+      assert.equal((await q("SELECT count(*)::int n FROM notifications WHERE event_id=$1 AND type LIKE 'reminder_2h:%'",[event2])).rows[0].n,1);
+      await q('UPDATE profiles SET reminders_enabled=true WHERE id=$1',[id(3)]);
+      await q('SELECT process_schedule_reminders()');
+      assert.equal((await q("SELECT count(*)::int n FROM notifications WHERE event_id=$1 AND type LIKE 'reminder_2h:%'",[event2])).rows[0].n,2);
+      await q("UPDATE events SET name='Culto revisado' WHERE id=$1",[event2]);
+      assert.equal((await q("SELECT count(*)::int n FROM notifications WHERE event_id=$1 AND title='Evento atualizado'",[event2])).rows[0].n,2);
+      await q("UPDATE events SET status='cancelled' WHERE id=$1",[event2]);
+      const cancelled=(await q("SELECT body FROM notifications WHERE event_id=$1 AND title='Evento cancelado'",[event2])).rows[0];
+      assert.match(cancelled.body,/não precisa servir/);
+      await q("INSERT INTO notifications(user_id,type,title,body,channel) VALUES($1,'test','Teste','Teste','app')",[id(6)]);
+      assert.equal((await q("SELECT count(*)::int n FROM notifications WHERE user_id=$1",[id(6)])).rows[0].n,0);
+      for(const fn of ['private.notification_copy()','private.notify_schedule_published()','public.process_schedule_reminders()']) assert.equal((await q("SELECT has_function_privilege('authenticated',$1,'EXECUTE') allowed",[fn])).rows[0].allowed,false);
     });
     await t.test('bucket privado limita tipo e fotos de outros ministérios',async()=>{
       await session('postgres');
