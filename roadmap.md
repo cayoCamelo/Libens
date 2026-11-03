@@ -6,7 +6,8 @@
 - [x] Validar fluxo autenticado e execução agendada dos lembretes
 
 ## Escalas — lista mensal compacta
-- [ ] Lista e filtros móveis em todos os perfis
-- [ ] Detalhes, editores reutilizados e exclusões com permissões preservadas
-- [ ] Trocas minimizadas e ações de presença preservadas
-- [ ] Testes e verificação autenticada sem alterar dados reais
+- [x] Lista e filtros móveis compartilhados por todos os perfis
+- [x] Detalhes, editores reutilizados e exclusões com permissões preservadas
+- [x] Trocas minimizadas e ações de presença preservadas
+- [x] 35 testes, typecheck e build; verificação autenticada de leitura em 320px/390px
+- [ ] Verificação com sessões reais de cada perfil e operações de escrita em homologação

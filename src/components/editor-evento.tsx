@@ -61,8 +61,9 @@ export function EditorEvento({ aberto, evento, onFechar }: { aberto: boolean; ev
       return setErro(r.error?.message ?? "Erro ao salvar");
     }
     const eventId = r.data.id;
-    const linhas = Object.entries(form.needs).filter(([, n]) => n > 0).map(([ministry_id, required_count]) => ({ event_id: eventId, ministry_id, required_count }));
-    const zerados = Object.entries(form.needs).filter(([, n]) => n <= 0).map(([id]) => id);
+    const necessidadesPermitidas = Object.entries(form.needs).filter(([id]) => d.podeGerenciar(id));
+    const linhas = necessidadesPermitidas.filter(([, n]) => n > 0).map(([ministry_id, required_count]) => ({ event_id: eventId, ministry_id, required_count }));
+    const zerados = necessidadesPermitidas.filter(([, n]) => n <= 0).map(([id]) => id);
     if (linhas.length) {
       const { error } = await supabase.from("event_ministry_needs").upsert(linhas, { onConflict: "event_id,ministry_id" });
       if (error) { setSalvando(false); await d.recarregar(); return setErro(traduzirErroDb(error)); }

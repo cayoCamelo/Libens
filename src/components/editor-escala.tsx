@@ -133,10 +133,11 @@ export function EditorEscala({
     if (!podeExcluir) return;
     if (!window.confirm(`Excluir somente a escala do ministério ${d.ministerios.find((m) => m.id === ministryId)?.name ?? "selecionado"} neste evento? O evento e as outras equipes serão preservados. Essa ação não pode ser desfeita.`)) return;
     setSalvando(true);
-    const r = await supabase.from("schedules").delete().in("id", existentes.map((s) => s.id));
+    const r = await supabase.from("schedules").delete().in("id", existentes.map((s) => s.id)).select("id");
     setSalvando(false);
     if (r.error) return setErro(traduzirErroDb(r.error));
     await d.recarregar();
+    if (!r.data || r.data.length !== existentes.length) return setErro("Nem todos os registros puderam ser excluídos. A lista foi atualizada; verifique suas permissões antes de tentar novamente.");
     onFechar();
   };
 
