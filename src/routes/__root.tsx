@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SessaoProvider } from "@/lib/perfil-context";
 import { Toaster } from "@/components/ui/sonner";
+import { InstalacaoProvider } from "@/components/instalar-libens";
 
 
 function NotFoundComponent() {
@@ -80,6 +81,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "theme-color", content: "#061918" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-title", content: "Libens" },
       { title: "Libens — Gestão de voluntários e escalas" },
       {
         name: "description",
@@ -96,6 +100,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
+      { rel: "manifest", href: "/manifest.webmanifest" },
       {
         rel: "stylesheet",
         href: appCss,
@@ -137,9 +142,11 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <SessaoProvider>
+        <InstalacaoProvider>
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
         <Toaster />
+        </InstalacaoProvider>
       </SessaoProvider>
     </QueryClientProvider>
   );

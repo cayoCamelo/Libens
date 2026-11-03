@@ -1,0 +1,10 @@
+{
+  "id": "/", "name": "Libens — Escalas e voluntários", "short_name": "Libens",
+  "description": "Ministérios, disponibilidade e escalas da sua igreja.",
+  "lang": "pt-BR", "start_url": "/app/inicio", "scope": "/", "display": "standalone",
+  "background_color": "#061918", "theme_color": "#061918",
+  "icons": [
+    { "src": "/libens-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/libens-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

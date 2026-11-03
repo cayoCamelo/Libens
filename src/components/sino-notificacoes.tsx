@@ -8,12 +8,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSessao } from "@/lib/perfil-context";
 import { cn } from "@/lib/utils";
 
-export function useNotificacoes() {
+export function useNotificacoes(intervalo = 5 * 60 * 1000) {
   const { usuario } = useSessao();
   return useQuery({
     queryKey: ["libens", "notificacoes", usuario.id],
     enabled: !!usuario.id,
-    refetchInterval: 5 * 60 * 1000,
+    refetchInterval: intervalo,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("notifications")

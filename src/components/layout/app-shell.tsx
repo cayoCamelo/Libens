@@ -8,6 +8,7 @@ import { SinoNotificacoes } from "@/components/sino-notificacoes";
 import { useAvatarUrl, useMeuPerfilExtra } from "@/lib/avatar";
 import { useSessao } from "@/lib/perfil-context";
 import { cn } from "@/lib/utils";
+import { AvisosNoAparelho } from "@/components/instalar-libens";
 
 export function AppShell({
   titulo,
@@ -53,6 +54,7 @@ export function AppShell({
 
   return (
     <div className="min-h-screen bg-background">
+      <AvisosNoAparelho key={usuario.id} />
       {/* Navegação lateral (tablet e desktop) */}
       <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-border bg-card px-4 py-6 md:flex">
         <Link to="/app/inicio" className="px-2">
