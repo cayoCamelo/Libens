@@ -27,14 +27,30 @@ const disponibilidade: ItemNav = {
 };
 const servosItem: ItemNav = { rotulo: "Servos", to: "/app/servos", icone: Users };
 const ministerios: ItemNav = { rotulo: "Ministérios", to: "/app/ministerios", icone: Church };
-const eventos: ItemNav = { rotulo: "Eventos", to: "/app/eventos", icone: CalendarDays };
 const perfilItem: ItemNav = { rotulo: "Perfil", to: "/app/perfil", icone: User };
 const painel: ItemNav = { rotulo: "Painel", to: "/app/painel", icone: LayoutDashboard };
 const admin: ItemNav = { rotulo: "Administração", to: "/app/admin", icone: Settings2 };
 
 export const navPorPerfil: Record<Perfil, ItemNav[]> = {
-  servo: [inicio, escalas, disponibilidade, ministerios, perfilItem],
-  lider: [inicio, escalas, ministerios, eventos, disponibilidade, servosItem, perfilItem],
-  pastor: [{ ...inicio, rotulo: "Visão pastoral", icone: LayoutDashboard }, escalas, ministerios, servosItem, eventos, disponibilidade, perfilItem],
-  admin: [{ ...painel, rotulo: "Visão administrativa" }, { ...admin, rotulo: "Usuários e acessos" }, ministerios, escalas, eventos, perfilItem],
+  servo: [inicio, escalas, disponibilidade, perfilItem],
+  lider: [inicio, escalas, disponibilidade, perfilItem],
+  pastor: [
+    inicio,
+    escalas,
+    disponibilidade,
+    ministerios,
+    { ...painel, rotulo: "Painel pastoral" },
+    servosItem,
+    perfilItem,
+  ],
+  admin: [
+    inicio,
+    escalas,
+    disponibilidade,
+    ministerios,
+    { ...painel, rotulo: "Painel administrativo" },
+    { ...admin, rotulo: "Usuários e acessos" },
+    servosItem,
+    perfilItem,
+  ],
 };

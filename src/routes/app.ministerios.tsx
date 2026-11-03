@@ -40,29 +40,88 @@ function MinisteriosPage() {
   const criar = async () => {
     setErro(null);
     if (!nome.trim()) return setErro("Informe o nome.");
-    const { error } = await supabase.from("ministries").insert({ name: nome.trim(), description: descricao.trim() || null });
+    const { error } = await supabase
+      .from("ministries")
+      .insert({ name: nome.trim(), description: descricao.trim() || null });
     if (error) return setErro(traduzirErroDb(error));
-    setNome(""); setDescricao(""); setCriando(false);
+    setNome("");
+    setDescricao("");
+    setCriando(false);
     await d.recarregar();
   };
 
+  if (!d.global)
+    return (
+      <AppShell titulo="Ministérios">
+        <p>Acesso exclusivo de Pastor(a) e Admin.</p>
+      </AppShell>
+    );
+
   return (
-    <AppShell titulo="Ministérios" descricao={d.global ? "Todos os ministérios" : "Seus ministérios"}>
-      {erro ? <p className="mb-3 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{erro}</p> : null}
-      {perfil==='admin'?<Button className="mb-4" onClick={()=>setCriando(true)}><Plus className="h-4 w-4"/>Novo ministério</Button>:null}
-      <Dialog open={criando} onOpenChange={setCriando}><DialogContent><DialogHeader><DialogTitle>Novo ministério</DialogTitle></DialogHeader><Input aria-label="Nome do ministério" placeholder="Nome" value={nome} onChange={e=>setNome(e.target.value)}/><Textarea aria-label="Descrição do ministério" placeholder="Descrição" value={descricao} onChange={e=>setDescricao(e.target.value)}/>{erro?<p role="alert" className="text-sm text-destructive">{erro}</p>:null}<Button onClick={()=>void criar()}>Criar ministério</Button></DialogContent></Dialog>
+    <AppShell
+      titulo="Ministérios"
+      descricao={d.global ? "Todos os ministérios" : "Seus ministérios"}
+    >
+      {erro ? (
+        <p className="mb-3 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{erro}</p>
+      ) : null}
+      {d.global ? (
+        <Button className="mb-4" onClick={() => setCriando(true)}>
+          <Plus className="h-4 w-4" />
+          Novo ministério
+        </Button>
+      ) : null}
+      <Dialog open={criando} onOpenChange={setCriando}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Novo ministério</DialogTitle>
+          </DialogHeader>
+          <Input
+            aria-label="Nome do ministério"
+            placeholder="Nome"
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+          />
+          <Textarea
+            aria-label="Descrição do ministério"
+            placeholder="Descrição"
+            value={descricao}
+            onChange={(e) => setDescricao(e.target.value)}
+          />
+          {erro ? (
+            <p role="alert" className="text-sm text-destructive">
+              {erro}
+            </p>
+          ) : null}
+          <Button onClick={() => void criar()}>Criar ministério</Button>
+        </DialogContent>
+      </Dialog>
       <div className="divide-y divide-border border-y border-border">
         {visiveis.map((m) => {
           const membros = d.membros.filter((x) => x.ministry_id === m.id);
           const lideres = d.lideres.filter((x) => x.ministry_id === m.id);
           return (
             <Link key={m.id} to="/app/ministerios/$id" params={{ id: m.id }} className="block">
-              <div className="grid min-h-20 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-4 hover:bg-accent/30"><div className="min-w-0"><p className="break-words text-sm font-semibold">{m.name}</p><p className="text-xs text-muted-foreground">{membros.length} membros · {lideres.map(l=>d.nomePessoa(l.user_id)).join(', ')||'Sem líder'}</p></div><span className="flex items-center gap-2 text-xs text-muted-foreground">{!m.active?'Inativo':null}<ChevronRight className="h-4 w-4"/></span></div>
+              <div className="grid min-h-20 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-4 hover:bg-accent/30">
+                <div className="min-w-0">
+                  <p className="break-words text-sm font-semibold">{m.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {membros.length} membros ·{" "}
+                    {lideres.map((l) => d.nomePessoa(l.user_id)).join(", ") || "Sem líder"}
+                  </p>
+                </div>
+                <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                  {!m.active ? "Inativo" : null}
+                  <ChevronRight className="h-4 w-4" />
+                </span>
+              </div>
             </Link>
           );
         })}
         {!d.carregando && visiveis.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Você ainda não participa de nenhum ministério.</p>
+          <p className="text-sm text-muted-foreground">
+            Você ainda não participa de nenhum ministério.
+          </p>
         ) : null}
       </div>
     </AppShell>

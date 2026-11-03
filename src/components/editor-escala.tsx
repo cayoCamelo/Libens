@@ -35,7 +35,7 @@ export function EditorEscala({
 }) {
   const { usuario } = useSessao();
   const d = useDados();
-  const [modo, setModo] = useState("single");
+  const [modo, setModo] = useState("month");
   const [eventId, setEventId] = useState("");
   const [ministryId, setMinistryId] = useState("");
   const [qtd, setQtd] = useState(0);
@@ -52,12 +52,19 @@ export function EditorEscala({
     [d.escalas, eventId, ministryId],
   );
   const ocupados = useMemo(
-    () => new Set(d.escalas.filter((s) => s.event_id === eventId && s.ministry_id !== ministryId).map((s) => s.user_id)),
+    () =>
+      new Set(
+        d.escalas
+          .filter((s) => s.event_id === eventId && s.ministry_id !== ministryId)
+          .map((s) => s.user_id),
+      ),
     [d.escalas, eventId, ministryId],
   );
   const podeExcluir = podeExcluirEscala(existentes, d.global, d.lidero, usuario.id);
   const membros = useMemo(() => {
-    const ids = new Set(d.membros.filter((m) => m.ministry_id === ministryId).map((m) => m.user_id));
+    const ids = new Set(
+      d.membros.filter((m) => m.ministry_id === ministryId).map((m) => m.user_id),
+    );
     return d.pessoas.filter((p) => ids.has(p.id));
   }, [d.membros, d.pessoas, ministryId]);
 
@@ -70,7 +77,7 @@ export function EditorEscala({
   // Reinicia ao abrir
   useEffect(() => {
     if (!aberto) return;
-    setModo("single");
+    setModo(inicial?.eventId ? "single" : "month");
     setEventId(inicial?.eventId ?? "");
     setMinistryId(inicial?.ministryId ?? "");
     setIndic(null);
@@ -98,8 +105,14 @@ export function EditorEscala({
       (disp.data ?? []).filter((x) => x.date === evento.date && x.available).map((x) => x.user_id),
     );
     const r = gerarEscala({
-      evento, ministryId, necessarios: qtd > 0 ? qtd : membros.length, membros, disponiveisNaData: disponiveis,
-      escalas: d.escalas.filter((s) => !(s.event_id === evento.id && s.ministry_id === ministryId && s.status === "draft")),
+      evento,
+      ministryId,
+      necessarios: qtd > 0 ? qtd : membros.length,
+      membros,
+      disponiveisNaData: disponiveis,
+      escalas: d.escalas.filter(
+        (s) => !(s.event_id === evento.id && s.ministry_id === ministryId && s.status === "draft"),
+      ),
       eventos: d.eventos,
     });
     setIndic(new Map(r.elegiveis.map((c) => [c.pessoa.id, c])));
@@ -110,14 +123,24 @@ export function EditorEscala({
   const salvar = async (publicar: boolean) => {
     if (!evento || !ministryId) return;
     if (!eventoAindaAberto(evento)) return setErro("Este evento está encerrado ou cancelado.");
-    if (membros.some((p) => sel.has(p.id) && !p.active)) return setErro("Remova os membros inativos da seleção.");
-    if (membros.some((p) => sel.has(p.id) && statusDisp(p.id) === "Indisponível") &&
-      !window.confirm("Há membros marcados como indisponíveis. Deseja manter esta exceção na escala?")) return;
+    if (membros.some((p) => sel.has(p.id) && !p.active))
+      return setErro("Remova os membros inativos da seleção.");
+    if (
+      membros.some((p) => sel.has(p.id) && statusDisp(p.id) === "Indisponível") &&
+      !window.confirm(
+        "Há membros marcados como indisponíveis. Deseja manter esta exceção na escala?",
+      )
+    )
+      return;
     setSalvando(true);
     setErro(null);
     try {
       const { error } = await supabase.rpc("save_schedule", {
-        _event_id: evento.id, _ministry_id: ministryId, _users: [...sel], _publish: publicar, _required: qtd,
+        _event_id: evento.id,
+        _ministry_id: ministryId,
+        _users: [...sel],
+        _publish: publicar,
+        _required: qtd,
       });
       if (error) throw error;
       await d.recarregar();
@@ -131,13 +154,28 @@ export function EditorEscala({
 
   const excluir = async () => {
     if (!podeExcluir) return;
-    if (!window.confirm(`Excluir somente a escala do ministério ${d.ministerios.find((m) => m.id === ministryId)?.name ?? "selecionado"} neste evento? O evento e as outras equipes serão preservados. Essa ação não pode ser desfeita.`)) return;
+    if (
+      !window.confirm(
+        `Excluir somente a escala do ministério ${d.ministerios.find((m) => m.id === ministryId)?.name ?? "selecionado"} neste evento? O evento e as outras equipes serão preservados. Essa ação não pode ser desfeita.`,
+      )
+    )
+      return;
     setSalvando(true);
-    const r = await supabase.from("schedules").delete().in("id", existentes.map((s) => s.id)).select("id");
+    const r = await supabase
+      .from("schedules")
+      .delete()
+      .in(
+        "id",
+        existentes.map((s) => s.id),
+      )
+      .select("id");
     setSalvando(false);
     if (r.error) return setErro(traduzirErroDb(r.error));
     await d.recarregar();
-    if (!r.data || r.data.length !== existentes.length) return setErro("Nem todos os registros puderam ser excluídos. A lista foi atualizada; verifique suas permissões antes de tentar novamente.");
+    if (!r.data || r.data.length !== existentes.length)
+      return setErro(
+        "Nem todos os registros puderam ser excluídos. A lista foi atualizada; verifique suas permissões antes de tentar novamente.",
+      );
     onFechar();
   };
 
@@ -147,108 +185,208 @@ export function EditorEscala({
         <DialogHeader>
           <DialogTitle>{existentes.length ? "Editar escala" : "Criar escala"}</DialogTitle>
         </DialogHeader>
-        {!inicial ? <Tabs value={modo} onValueChange={setModo}>
-          <TabsList className="grid w-full grid-cols-2"><TabsTrigger value="single">Um evento</TabsTrigger><TabsTrigger value="month">Mês atual</TabsTrigger></TabsList>
-        </Tabs> : null}
-        {modo === "month" && !inicial ? <EditorEscalaMensal onFechar={onFechar}/> : <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label>Evento</Label>
-            <Select value={eventId} onValueChange={setEventId}>
-              <SelectTrigger aria-label="Evento"><SelectValue placeholder="Selecione o evento" /></SelectTrigger>
-              <SelectContent>
-                {d.eventos.filter((e) => eventoAindaAberto(e)).map((e) => (
-                  <SelectItem key={e.id} value={e.id}>{e.name} · {e.date.split("-").reverse().join("/")} {hora(e.start_time)}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Ministério</Label>
-            <Select value={ministryId} onValueChange={setMinistryId}>
-              <SelectTrigger aria-label="Ministério"><SelectValue placeholder="Selecione o ministério" /></SelectTrigger>
-              <SelectContent>
-                {ministeriosPermitidos.map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
+        {!inicial ? (
+          <Tabs value={modo} onValueChange={setModo}>
+            <TabsList className="grid w-full grid-cols-1">
+              <TabsTrigger value="month">Mês atual</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        ) : null}
+        {modo === "month" && !inicial ? (
+          <EditorEscalaMensal onFechar={onFechar} />
+        ) : (
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Evento</Label>
+              <Select value={eventId} onValueChange={setEventId}>
+                <SelectTrigger aria-label="Evento">
+                  <SelectValue placeholder="Selecione o evento" />
+                </SelectTrigger>
+                <SelectContent>
+                  {d.eventos
+                    .filter((e) => eventoAindaAberto(e))
+                    .map((e) => (
+                      <SelectItem key={e.id} value={e.id}>
+                        {e.name} · {e.date.split("-").reverse().join("/")} {hora(e.start_time)}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Ministério</Label>
+              <Select value={ministryId} onValueChange={setMinistryId}>
+                <SelectTrigger aria-label="Ministério">
+                  <SelectValue placeholder="Selecione o ministério" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ministeriosPermitidos.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      {m.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          {evento && ministryId ? (
-            <>
-              <p className="text-sm text-muted-foreground">
-                {formatarData(evento.date)} · {hora(evento.start_time)}{evento.end_time ? `–${hora(evento.end_time)}` : ""}
-              </p>
-              <div className="grid items-end gap-3 sm:grid-cols-[auto_minmax(0,1fr)]">
-                <div className="space-y-1.5">
-                  <Label>Pessoas necessárias (opcional)</Label>
-                  <Select value={String(qtd)} onValueChange={(v) => setQtd(Number(v))}>
-                    <SelectTrigger className="w-28" aria-label="Pessoas necessárias"><SelectValue /></SelectTrigger>
-                    <SelectContent className="max-h-64">
-                      {Array.from({ length: 101 }, (_, i) => (
-                        <SelectItem key={i} value={String(i)}>{i === 0 ? "Livre" : i}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button variant="secondary" className="flex-1" onClick={gerar} disabled={disp.isLoading}>
-                  <Sparkles className="h-4 w-4" /> Gerar escala automaticamente
-                </Button>
-              </div>
-
-              {aviso ? (
-                <div className="space-y-3 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm">
-                  <p className="flex items-center gap-2 font-semibold text-destructive"><AlertTriangle className="h-4 w-4" /> Atenção</p>
-                  <p className="text-foreground">São necessárias {aviso.nec} pessoas. Somente {aviso.disp} {aviso.disp === 1 ? "pessoa está disponível" : "pessoas estão disponíveis"}.</p>
-                  <div className="flex gap-2">
-                    <Button size="sm" onClick={() => setAviso(null)}>Continuar mesmo assim</Button>
-                    <Button size="sm" variant="outline" onClick={() => { setAviso(null); setIndic(null); }}>Voltar e editar</Button>
+            {evento && ministryId ? (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  {formatarData(evento.date)} · {hora(evento.start_time)}
+                  {evento.end_time ? `–${hora(evento.end_time)}` : ""}
+                </p>
+                <div className="grid items-end gap-3 sm:grid-cols-[auto_minmax(0,1fr)]">
+                  <div className="space-y-1.5">
+                    <Label>Pessoas necessárias (opcional)</Label>
+                    <Select value={String(qtd)} onValueChange={(v) => setQtd(Number(v))}>
+                      <SelectTrigger className="w-28" aria-label="Pessoas necessárias">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-64">
+                        {Array.from({ length: 101 }, (_, i) => (
+                          <SelectItem key={i} value={String(i)}>
+                            {i === 0 ? "Livre" : i}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
+                  <Button
+                    variant="secondary"
+                    className="flex-1"
+                    onClick={gerar}
+                    disabled={disp.isLoading}
+                  >
+                    <Sparkles className="h-4 w-4" /> Gerar escala automaticamente
+                  </Button>
                 </div>
-              ) : null}
 
-              {indic ? <p className="text-sm font-semibold text-foreground">Escala sugerida — revise antes de publicar</p> : null}
+                {aviso ? (
+                  <div className="space-y-3 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm">
+                    <p className="flex items-center gap-2 font-semibold text-destructive">
+                      <AlertTriangle className="h-4 w-4" /> Atenção
+                    </p>
+                    <p className="text-foreground">
+                      São necessárias {aviso.nec} pessoas. Somente {aviso.disp}{" "}
+                      {aviso.disp === 1 ? "pessoa está disponível" : "pessoas estão disponíveis"}.
+                    </p>
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={() => setAviso(null)}>
+                        Continuar mesmo assim
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setAviso(null);
+                          setIndic(null);
+                        }}
+                      >
+                        Voltar e editar
+                      </Button>
+                    </div>
+                  </div>
+                ) : null}
 
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-foreground">Membros do ministério ({sel.size}{qtd > 0 ? `/${qtd}` : " selecionados"})</p>
-                {membros.length === 0 ? <p className="text-sm text-muted-foreground">Este ministério ainda não tem membros.</p> : null}
-                {membros.map((p) => {
-                  const c = indic?.get(p.id);
-                  const st = statusDisp(p.id);
-                  const ocupado = ocupados.has(p.id);
-                  return (
-                    <label key={p.id} className="flex items-start gap-3 rounded-lg border border-border p-3">
-                      <Checkbox
-                        checked={sel.has(p.id)}
-                        disabled={(!p.active || ocupado) && !sel.has(p.id)}
-                        onCheckedChange={(v) => setSel((s) => { const n = new Set(s); if (v) n.add(p.id); else n.delete(p.id); return n; })}
-                        className="mt-0.5"
-                      />
-                      <div className="min-w-0 flex-1 text-sm">
-                        <p className="font-medium text-foreground">{p.full_name || p.email}{!p.active ? " (inativo)" : ""}</p>
-                        {ocupado ? <p className="text-xs font-medium text-destructive">Este membro já está escalado para outro ministério neste evento.</p> : null}
-                        <p className={st === "Disponível" ? "text-success" : st === "Indisponível" ? "text-destructive" : "text-muted-foreground"}>{st}</p>
-                        {c ? (
-                          <p className="text-xs text-muted-foreground">
-                            {c.noMes} {c.noMes === 1 ? "escala" : "escalas"} no mês · {c.diasDesdeUltima === null ? "nunca escalado" : `última escala há ${c.diasDesdeUltima} dias`}
+                {indic ? (
+                  <p className="text-sm font-semibold text-foreground">
+                    Escala sugerida — revise antes de publicar
+                  </p>
+                ) : null}
+
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-foreground">
+                    Membros do ministério ({sel.size}
+                    {qtd > 0 ? `/${qtd}` : " selecionados"})
+                  </p>
+                  {membros.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      Este ministério ainda não tem membros.
+                    </p>
+                  ) : null}
+                  {membros.map((p) => {
+                    const c = indic?.get(p.id);
+                    const st = statusDisp(p.id);
+                    const ocupado = ocupados.has(p.id);
+                    return (
+                      <label
+                        key={p.id}
+                        className="flex items-start gap-3 rounded-lg border border-border p-3"
+                      >
+                        <Checkbox
+                          checked={sel.has(p.id)}
+                          disabled={(!p.active || ocupado) && !sel.has(p.id)}
+                          onCheckedChange={(v) =>
+                            setSel((s) => {
+                              const n = new Set(s);
+                              if (v) n.add(p.id);
+                              else n.delete(p.id);
+                              return n;
+                            })
+                          }
+                          className="mt-0.5"
+                        />
+                        <div className="min-w-0 flex-1 text-sm">
+                          <p className="font-medium text-foreground">
+                            {p.full_name || p.email}
+                            {!p.active ? " (inativo)" : ""}
                           </p>
-                        ) : null}
-                      </div>
-                    </label>
-                  );
-                })}
-              </div>
+                          {ocupado ? (
+                            <p className="text-xs font-medium text-destructive">
+                              Este membro já está escalado para outro ministério neste evento.
+                            </p>
+                          ) : null}
+                          <p
+                            className={
+                              st === "Disponível"
+                                ? "text-success"
+                                : st === "Indisponível"
+                                  ? "text-destructive"
+                                  : "text-muted-foreground"
+                            }
+                          >
+                            {st}
+                          </p>
+                          {c ? (
+                            <p className="text-xs text-muted-foreground">
+                              {c.noMes} {c.noMes === 1 ? "escala" : "escalas"} no mês ·{" "}
+                              {c.diasDesdeUltima === null
+                                ? "nunca escalado"
+                                : `última escala há ${c.diasDesdeUltima} dias`}
+                            </p>
+                          ) : null}
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
 
-              {erro ? <p className="text-sm text-destructive">{erro}</p> : null}
-              {podeExcluir ? (
-                <Button variant="ghost" className="w-full text-destructive" onClick={() => void excluir()} disabled={salvando}>Excluir escala deste ministério</Button>
-              ) : null}
-              <div className="grid gap-2 sm:grid-cols-3">
-                <Button variant="ghost" onClick={onFechar}>Cancelar</Button>
-                <Button variant="outline" onClick={() => void salvar(false)} disabled={salvando}>Salvar rascunho</Button>
-                <Button onClick={() => void salvar(true)} disabled={salvando}>Publicar</Button>
-              </div>
-            </>
-          ) : null}
-        </div>}
+                {erro ? <p className="text-sm text-destructive">{erro}</p> : null}
+                {podeExcluir ? (
+                  <Button
+                    variant="ghost"
+                    className="w-full text-destructive"
+                    onClick={() => void excluir()}
+                    disabled={salvando}
+                  >
+                    Excluir escala deste ministério
+                  </Button>
+                ) : null}
+                <div className="grid gap-2 sm:grid-cols-3">
+                  <Button variant="ghost" onClick={onFechar}>
+                    Cancelar
+                  </Button>
+                  <Button variant="outline" onClick={() => void salvar(false)} disabled={salvando}>
+                    Salvar rascunho
+                  </Button>
+                  <Button onClick={() => void salvar(true)} disabled={salvando}>
+                    Publicar
+                  </Button>
+                </div>
+              </>
+            ) : null}
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

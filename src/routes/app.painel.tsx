@@ -19,7 +19,12 @@ export const Route = createFileRoute("/app/painel")({
 });
 
 function PainelPage() {
- const { perfil } = useSessao();
- if (perfil !== 'admin') return <AppShell titulo="Painel administrativo"><p className="text-sm text-muted-foreground">Somente o administrador acessa esta área.</p></AppShell>;
- return <GestaoDashboard tipo="admin" />;
+  const { perfil } = useSessao();
+  if (perfil !== "admin" && perfil !== "pastor")
+    return (
+      <AppShell titulo="Painel administrativo">
+        <p className="text-sm text-muted-foreground">Somente o administrador acessa esta área.</p>
+      </AppShell>
+    );
+  return <GestaoDashboard tipo={perfil === "pastor" ? "pastor" : "admin"} />;
 }

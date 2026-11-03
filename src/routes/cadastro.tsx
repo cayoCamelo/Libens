@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { EscolherMinisterios } from "@/components/escolher-ministerios";
 import { MailCheck } from "lucide-react";
 import { useState } from "react";
 
@@ -16,13 +17,18 @@ export const Route = createFileRoute("/cadastro")({
       { title: "Criar conta — Libens" },
       { name: "description", content: "Crie sua conta no Libens para servir nos ministérios." },
       { property: "og:title", content: "Criar conta — Libens" },
-      { property: "og:description", content: "Crie sua conta no Libens para servir nos ministérios." },
+      {
+        property: "og:description",
+        content: "Crie sua conta no Libens para servir nos ministérios.",
+      },
     ],
   }),
   component: CadastroPage,
 });
 
 function CadastroPage() {
+  const [ids, setIds] = useState<string[]>([]);
+  const [mostrarSenha, setMostrarSenha] = useState(false);
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
@@ -57,13 +63,17 @@ function CadastroPage() {
           onSubmit={async (e) => {
             e.preventDefault();
             setErro(null);
+            if (ids.length < 1 || ids.length > 2)
+              return setErro("Selecione um ou dois ministérios.");
+            if (nome.trim().split(/\s+/).length !== 2)
+              return setErro("Informe seu primeiro e segundo nome.");
             setEnviando(true);
             const { error } = await supabase.auth.signUp({
               email,
               password: senha,
               options: {
                 emailRedirectTo: `${window.location.origin}/app/inicio`,
-                data: { full_name: nome.trim() },
+                data: { full_name: nome.trim(), ministry_ids: ids },
               },
             });
             setEnviando(false);
@@ -73,8 +83,17 @@ function CadastroPage() {
         >
           {erro ? <MensagemErro>{erro}</MensagemErro> : null}
           <div className="space-y-2">
-            <Label htmlFor="nome">Nome completo</Label>
-            <Input id="nome" required maxLength={120} value={nome} onChange={(e) => setNome(e.target.value)} />
+            <Label htmlFor="nome">Nome</Label>
+            <Input
+              id="nome"
+              required
+              maxLength={120}
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Informe apenas seu primeiro e segundo nome.
+            </p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">E-mail</Label>
@@ -91,7 +110,7 @@ function CadastroPage() {
             <Label htmlFor="senha">Senha</Label>
             <Input
               id="senha"
-              type="password"
+              type={mostrarSenha ? "text" : "password"}
               required
               minLength={6}
               autoComplete="new-password"
@@ -99,7 +118,16 @@ function CadastroPage() {
               onChange={(e) => setSenha(e.target.value)}
             />
           </div>
-          <Button type="submit" className="w-full" disabled={enviando}>
+          <button
+            type="button"
+            aria-pressed={mostrarSenha}
+            className="text-sm text-primary"
+            onClick={() => setMostrarSenha(!mostrarSenha)}
+          >
+            {mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
+          </button>
+          <EscolherMinisterios value={ids} onChange={setIds} />
+          <Button type="submit" className="w-full" disabled={enviando || !ids.length}>
             {enviando ? "Criando..." : "Criar conta"}
           </Button>
         </form>

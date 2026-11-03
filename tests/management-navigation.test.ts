@@ -1,16 +1,24 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import { navPorPerfil } from '../src/components/layout/nav-config.ts';
-test('gestão pastoral e administrativa têm entradas distintas e acesso administrativo separado',()=>{
- assert.equal(navPorPerfil.pastor[0]?.to,'/app/inicio');
- assert.equal(navPorPerfil.admin[0]?.to,'/app/painel');
- assert.equal(navPorPerfil.admin.some(n=>n.to==='/app/admin'),true);
- for(const role of ['servo','lider','pastor'] as const)assert.equal(navPorPerfil[role].some(n=>n.to==='/app/admin'||n.to==='/app/painel'),false);
+import test from "node:test";
+import assert from "node:assert/strict";
+import { navPorPerfil } from "../src/components/layout/nav-config.ts";
+test("servo e líder têm quatro abas sem gestão de ministérios", () => {
+  for (const role of ["servo", "lider"] as const)
+    assert.deepEqual(
+      navPorPerfil[role].map((n) => n.to),
+      ["/app/inicio", "/app/escalas", "/app/disponibilidade", "/app/perfil"],
+    );
 });
-test('navegação compacta conserva todas as páginas sem duplicar caminhos',()=>{
- for(const items of Object.values(navPorPerfil)){
-  assert.equal(new Set(items.map(i=>i.to)).size,items.length);
-  assert.equal(items.some(i=>i.to==='/app/perfil'),true);
-  assert.equal(items.slice(0,3).length+items.slice(3).length,items.length);
- }
+test("pastor e admin acessam ministérios e painéis, somente admin tem usuários e acessos", () => {
+  for (const role of ["pastor", "admin"] as const) {
+    assert(navPorPerfil[role].some((n) => n.to === "/app/ministerios"));
+    assert(navPorPerfil[role].some((n) => n.to === "/app/painel"));
+  }
+  assert(!navPorPerfil.pastor.some((n) => n.to === "/app/admin"));
+  assert(navPorPerfil.admin.some((n) => n.to === "/app/admin"));
+});
+test("navegação sem caminhos duplicados", () => {
+  for (const items of Object.values(navPorPerfil)) {
+    assert.equal(new Set(items.map((i) => i.to)).size, items.length);
+    assert(items.some((i) => i.to === "/app/perfil"));
+  }
 });

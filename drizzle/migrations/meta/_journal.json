@@ -85,6 +85,13 @@
       "when": 1793678431281,
       "tag": "0011_separated_management_delete_member",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1793734512329,
+      "tag": "0012_navigation_signup_substitutions",
+      "breakpoints": true
     }
   ]
 }

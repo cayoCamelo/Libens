@@ -1,7 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { LibensLogo } from "@/components/libens-logo";
 import { LogOut, Moon, Sun, MoreHorizontal } from "lucide-react";
 import { navPorPerfil } from "@/components/layout/nav-config";
@@ -9,6 +14,7 @@ import { SinoNotificacoes } from "@/components/sino-notificacoes";
 import { useAvatarUrl, useMeuPerfilExtra } from "@/lib/avatar";
 import { useSessao } from "@/lib/perfil-context";
 import { cn } from "@/lib/utils";
+import { CompletarCadastro } from "@/components/completar-cadastro";
 import { AvisosNoAparelho } from "@/components/instalar-libens";
 
 export function AppShell({
@@ -44,11 +50,21 @@ export function AppShell({
     return (
       <main className="mx-auto max-w-lg space-y-4 p-6" aria-live="polite">
         <h1 className="text-xl font-semibold">Libens</h1>
-        <p>{carregando ? "Carregando seu perfil..." : erroPerfil ?? "Sua conta está inativa. Entre em contato com a administração."}</p>
-        {!carregando ? <div className="flex gap-4">
-          <button type="button" onClick={() => void recarregarPerfil()}>Tentar novamente</button>
-          <button type="button" onClick={() => void sair().catch(() => undefined)}>Sair</button>
-        </div> : null}
+        <p>
+          {carregando
+            ? "Carregando seu perfil..."
+            : (erroPerfil ?? "Sua conta está inativa. Entre em contato com a administração.")}
+        </p>
+        {!carregando ? (
+          <div className="flex gap-4">
+            <button type="button" onClick={() => void recarregarPerfil()}>
+              Tentar novamente
+            </button>
+            <button type="button" onClick={() => void sair().catch(() => undefined)}>
+              Sair
+            </button>
+          </div>
+        ) : null}
       </main>
     );
   }
@@ -56,6 +72,7 @@ export function AppShell({
   return (
     <div className="min-h-screen bg-background">
       <AvisosNoAparelho key={usuario.id} />
+      <CompletarCadastro />
       {/* Navegação lateral (tablet e desktop) */}
       <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-border bg-card px-4 py-6 md:flex">
         <Link to="/app/inicio" className="px-2">
@@ -128,20 +145,96 @@ export function AppShell({
               >
                 <LogOut className="h-4.5 w-4.5" />
               </button>
-              <Link to="/app/perfil" aria-label="Meu perfil" className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-secondary text-sm font-semibold text-secondary-foreground">
-                {foto ? <img src={foto} alt="" className="h-full w-full object-cover" /> : usuario.nome.charAt(0).toUpperCase()}
+              <Link
+                to="/app/perfil"
+                aria-label="Meu perfil"
+                className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-secondary text-sm font-semibold text-secondary-foreground"
+              >
+                {foto ? (
+                  <img src={foto} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  usuario.nome.charAt(0).toUpperCase()
+                )}
               </Link>
             </div>
           </div>
         </header>
 
-        <main className={cn("mx-auto px-4 pt-5 pb-28 md:px-8 md:pb-10", perfil==="admin"||perfil==="pastor"?"max-w-5xl":"max-w-3xl")}>{children}</main>
+        <main
+          className={cn(
+            "mx-auto px-4 pt-5 pb-28 md:px-8 md:pb-10",
+            perfil === "admin" || perfil === "pastor" ? "max-w-5xl" : "max-w-3xl",
+          )}
+        >
+          {children}
+        </main>
       </div>
 
-      <nav aria-label="Navegação do aplicativo" className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-card/95 backdrop-blur md:hidden">
+      <nav
+        aria-label="Navegação do aplicativo"
+        className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-card/95 backdrop-blur md:hidden"
+      >
         <ul className="flex items-stretch">
-          {itens.slice(0,3).map(item=><li key={item.to} className="min-w-0 flex-1"><Link to={item.to} aria-current={pathname===item.to?'page':undefined} className={cn('flex min-h-16 flex-col items-center justify-center gap-1 px-1 py-2 text-[11px]',pathname===item.to?'text-primary':'text-muted-foreground')}><item.icone className="h-5 w-5"/><span className="w-full truncate text-center">{item.rotulo.startsWith('Visão')?'Painel':item.to==='/app/admin'?'Contas':item.rotulo}</span></Link></li>)}
-          <li className="min-w-0 flex-1"><DropdownMenu><DropdownMenuTrigger asChild><button type="button" className={cn('flex min-h-16 w-full flex-col items-center justify-center gap-1 px-1 py-2 text-[11px]',itens.slice(3).some(i=>i.to===pathname)?'text-primary':'text-muted-foreground')} aria-label="Mais páginas"><MoreHorizontal className="h-5 w-5"/><span>Mais</span></button></DropdownMenuTrigger><DropdownMenuContent side="top" align="end" className="mb-2 w-60 max-w-[calc(100vw-1rem)]">{itens.slice(3).map(item=><DropdownMenuItem key={item.to} asChild><Link to={item.to} className="min-h-11 gap-3" aria-current={pathname===item.to?'page':undefined}><item.icone className="h-4 w-4"/>{item.rotulo}</Link></DropdownMenuItem>)}</DropdownMenuContent></DropdownMenu></li>
+          {(itens.length <= 4 ? itens : itens.slice(0, 3)).map((item) => (
+            <li key={item.to} className="min-w-0 flex-1">
+              <Link
+                to={item.to}
+                aria-current={pathname === item.to ? "page" : undefined}
+                className={cn(
+                  "flex min-h-16 flex-col items-center justify-center gap-1 px-1 py-2 text-[11px]",
+                  pathname === item.to ? "text-primary" : "text-muted-foreground",
+                )}
+              >
+                <item.icone className="h-5 w-5" />
+                <span className="w-full truncate text-center">
+                  {item.rotulo.startsWith("Visão")
+                    ? "Painel"
+                    : item.to === "/app/admin"
+                      ? "Contas"
+                      : item.rotulo}
+                </span>
+              </Link>
+            </li>
+          ))}
+          {itens.length > 4 ? (
+            <li className="min-w-0 flex-1">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className={cn(
+                      "flex min-h-16 w-full flex-col items-center justify-center gap-1 px-1 py-2 text-[11px]",
+                      itens.slice(3).some((i) => i.to === pathname)
+                        ? "text-primary"
+                        : "text-muted-foreground",
+                    )}
+                    aria-label="Mais páginas"
+                  >
+                    <MoreHorizontal className="h-5 w-5" />
+                    <span>Mais</span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  side="top"
+                  align="end"
+                  className="mb-2 w-60 max-w-[calc(100vw-1rem)]"
+                >
+                  {itens.slice(3).map((item) => (
+                    <DropdownMenuItem key={item.to} asChild>
+                      <Link
+                        to={item.to}
+                        className="min-h-11 gap-3"
+                        aria-current={pathname === item.to ? "page" : undefined}
+                      >
+                        <item.icone className="h-4 w-4" />
+                        {item.rotulo}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </li>
+          ) : null}
         </ul>
       </nav>
     </div>
