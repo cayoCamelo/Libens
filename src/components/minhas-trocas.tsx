@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Check, Repeat, X } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, Repeat, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -15,9 +15,11 @@ import {
 } from "@/lib/dados";
 import { useSessao } from "@/lib/perfil-context";
 import { useDados } from "@/lib/use-dados";
+import { contarTrocasPendentes } from "@/lib/escalas-visao";
 
 /** Confirmação de presença, pedidos de troca e aprovações — regras validadas no banco. */
-export function MinhasTrocas() {
+export function MinhasTrocas({ eventId, inicialmenteAberto = false }: { eventId?: string; inicialmenteAberto?: boolean } = {}) {
+  const [expandido, setExpandido] = useState(inicialmenteAberto);
   const { usuario } = useSessao();
   const d = useDados();
   const trocas = useQuery({ queryKey: ["libens", "trocas", usuario.id], queryFn: listarTrocas, enabled: !!usuario.id });
@@ -27,7 +29,8 @@ export function MinhasTrocas() {
     queryKey: ["libens", "candidatos", pedido?.id],
     enabled: !!pedido,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("substitute_candidates", { _sid: pedido!.id });
+      if (!pedido) return [];
+      const { data, error } = await supabase.rpc("substitute_candidates", { _sid: pedido.id });
       if (error) throw new Error(error.message);
       return data ?? [];
     },
@@ -45,10 +48,10 @@ export function MinhasTrocas() {
 
   const evento = (id: string) => d.eventos.find((e) => e.id === id);
   const minis = (id: string) => d.ministerios.find((m) => m.id === id)?.name ?? "";
-  const lista = trocas.data ?? [];
+  const lista = (trocas.data ?? []).filter((t) => !eventId || t.event_id === eventId);
   const abertas = new Set(lista.filter((t) => t.status.startsWith("pending")).map((t) => t.schedule_id));
   const minhas = d.escalas
-    .filter((s) => s.user_id === usuario.id && ["scheduled", "confirmed"].includes(s.status) && eventoAberto(evento(s.event_id)))
+    .filter((s) => (!eventId || s.event_id === eventId) && s.user_id === usuario.id && ["scheduled", "confirmed"].includes(s.status) && eventoAberto(evento(s.event_id)))
     .sort((a, b) => (evento(a.event_id)?.date ?? "").localeCompare(evento(b.event_id)?.date ?? ""));
   const paraMim = lista.filter((t) => t.substitute_id === usuario.id && t.status === "pending_substitute");
   const aprovar = lista.filter((t) => t.status === "pending_leader" && d.podeGerenciar(t.ministry_id));
@@ -61,8 +64,12 @@ export function MinhasTrocas() {
   if (!minhas.length && !lista.length) return null;
 
   return (
-    <Card className="mb-4">
-      <CardContent className="space-y-4 p-4">
+    <section className="mb-4 border-y border-border py-2">
+      <Button variant="ghost" className="grid h-auto min-h-11 w-full grid-cols-[minmax(0,1fr)_auto] gap-2 whitespace-normal px-1 text-left" aria-expanded={expandido} aria-controls={eventId ? `trocas-${eventId}` : "minhas-trocas"} onClick={() => setExpandido((v) => !v)}>
+        <span className="min-w-0">Substituições e minhas escalas <span className="text-muted-foreground">· {contarTrocasPendentes(lista)} pendentes</span></span>
+        <span className="flex shrink-0 items-center gap-1 text-xs">{expandido ? <ChevronUp /> : <ChevronDown />}{expandido ? "Minimizar" : "Expandir"}</span>
+      </Button>
+      {expandido ? <div id={eventId ? `trocas-${eventId}` : "minhas-trocas"} className="space-y-4 py-3 [&_button]:min-h-11 [&_button]:whitespace-normal">
         {minhas.length ? (
           <div className="space-y-2">
             <p className="text-sm font-semibold text-foreground">Minhas próximas escalas</p>
@@ -70,7 +77,7 @@ export function MinhasTrocas() {
               const e = evento(s.event_id);
               return (
                 <div key={s.id} className="space-y-2 rounded-lg border border-border p-3">
-                  <div className="flex items-start justify-between gap-2">
+                  <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-foreground">{e?.name} · {minis(s.ministry_id)}</p>
                       <p className="text-xs text-muted-foreground">{e ? `${dataBr(e.date)} às ${hora(e.start_time)}` : ""}</p>
@@ -146,14 +153,14 @@ export function MinhasTrocas() {
             </ul>
           </details>
         ) : null}
-      </CardContent>
+      </div> : null}
 
       <Dialog open={!!pedido} onOpenChange={(o) => !o && setPedido(null)}>
-        <DialogContent>
+        <DialogContent className="max-h-[90dvh] w-[calc(100%-1rem)] overflow-y-auto p-4 sm:p-6">
           <DialogHeader><DialogTitle>Pedir substituição</DialogTitle></DialogHeader>
           <p className="text-sm text-muted-foreground">
             Sugestões do mesmo ministério, disponíveis e sem conflito de horário.
-            {pedido && evento(pedido.event_id) ? ` Evento: ${rotuloEventoStatus[evento(pedido.event_id)!.status]}.` : ""}
+            {pedido ? ` Evento: ${rotuloEventoStatus[evento(pedido.event_id)?.status ?? ""] ?? ""}.` : ""}
           </p>
           <Input placeholder="Motivo (opcional)" maxLength={300} value={motivo} onChange={(e) => setMotivo(e.target.value)} />
           <div className="max-h-64 space-y-1.5 overflow-y-auto">
@@ -161,13 +168,13 @@ export function MinhasTrocas() {
             {candidatos.data?.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum substituto disponível.</p> : null}
             {candidatos.data?.map((c) => (
               <Button key={c.user_id} variant="outline" className="w-full justify-start" disabled={ocupado}
-                onClick={() => void rodar(() => supabase.rpc("request_substitution", { _sid: pedido!.id, _substitute: c.user_id, _reason: motivo }), "Pedido enviado ao substituto.").then(() => setPedido(null))}>
+                onClick={() => { if (!pedido) return; const sid = pedido.id; void rodar(() => supabase.rpc("request_substitution", { _sid: sid, _substitute: c.user_id, _reason: motivo }), "Pedido enviado ao substituto.").then(() => setPedido(null)); }}>
                 {c.full_name || "Sem nome"}
               </Button>
             ))}
           </div>
         </DialogContent>
       </Dialog>
-    </Card>
+    </section>
   );
 }

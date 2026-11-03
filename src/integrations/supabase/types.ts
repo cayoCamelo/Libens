@@ -589,16 +589,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      month_schedule_context: { Args: { _ministry_id: string }; Returns: Json }
-      save_month_schedule: { Args: { _ministry_id: string; _month: string; _plan: Json; _publish: boolean }; Returns: number }
-      list_people: {
-        Args: Record<PropertyKey, never>
-        Returns: { id: string; full_name: string; email: string; phone: string | null; role: Database["public"]["Enums"]["app_role"]; active: boolean; created_at: string }[]
-      }
-      save_schedule: {
-        Args: { _event_id: string; _ministry_id: string; _users: string[]; _publish: boolean; _required: number }
-        Returns: undefined
-      }
       _evento_aberto: { Args: { _eid: string }; Returns: undefined }
       _notify: {
         Args: {
@@ -646,6 +636,19 @@ export type Database = {
         Args: { _leader: string; _member: string }
         Returns: boolean
       }
+      list_people: {
+        Args: never
+        Returns: {
+          active: boolean
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          phone: string
+          role: Database["public"]["Enums"]["app_role"]
+        }[]
+      }
+      month_schedule_context: { Args: { _ministry_id: string }; Returns: Json }
       process_schedule_reminders: { Args: never; Returns: number }
       profile_whatsapp: { Args: { _uid: string }; Returns: string }
       refresh_event_statuses: { Args: never; Returns: number }
@@ -659,6 +662,25 @@ export type Database = {
       }
       respond_substitution: {
         Args: { _accept: boolean; _rid: string }
+        Returns: undefined
+      }
+      save_month_schedule: {
+        Args: {
+          _ministry_id: string
+          _month: string
+          _plan: Json
+          _publish: boolean
+        }
+        Returns: number
+      }
+      save_schedule: {
+        Args: {
+          _event_id: string
+          _ministry_id: string
+          _publish: boolean
+          _required: number
+          _users: string[]
+        }
         Returns: undefined
       }
       set_event_cancelled: {

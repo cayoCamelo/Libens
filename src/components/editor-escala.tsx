@@ -22,6 +22,7 @@ import { eventoAindaAberto } from "@/lib/eventos";
 import { gerarEscala, type Candidato } from "@/lib/gerador-escala";
 import { useSessao } from "@/lib/perfil-context";
 import { useDados } from "@/lib/use-dados";
+import { podeExcluirEscala } from "@/lib/escalas-visao";
 
 export function EditorEscala({
   aberto,
@@ -54,7 +55,7 @@ export function EditorEscala({
     () => new Set(d.escalas.filter((s) => s.event_id === eventId && s.ministry_id !== ministryId).map((s) => s.user_id)),
     [d.escalas, eventId, ministryId],
   );
-  const podeExcluir = existentes.length > 0 && (d.global || existentes.every((s) => s.created_by === usuario.id && d.lidero.has(s.ministry_id)));
+  const podeExcluir = podeExcluirEscala(existentes, d.global, d.lidero, usuario.id);
   const membros = useMemo(() => {
     const ids = new Set(d.membros.filter((m) => m.ministry_id === ministryId).map((m) => m.user_id));
     return d.pessoas.filter((p) => ids.has(p.id));
@@ -129,7 +130,8 @@ export function EditorEscala({
   };
 
   const excluir = async () => {
-    if (!window.confirm("Excluir esta escala? Essa ação não pode ser desfeita.")) return;
+    if (!podeExcluir) return;
+    if (!window.confirm(`Excluir somente a escala do ministério ${d.ministerios.find((m) => m.id === ministryId)?.name ?? "selecionado"} neste evento? O evento e as outras equipes serão preservados. Essa ação não pode ser desfeita.`)) return;
     setSalvando(true);
     const r = await supabase.from("schedules").delete().in("id", existentes.map((s) => s.id));
     setSalvando(false);
@@ -140,7 +142,7 @@ export function EditorEscala({
 
   return (
     <Dialog open={aberto} onOpenChange={(o) => !o && onFechar()}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90dvh] w-[calc(100%-1rem)] overflow-y-auto p-4 sm:p-6 [&_button]:min-h-11 [&_button]:whitespace-normal">
         <DialogHeader>
           <DialogTitle>{existentes.length ? "Editar escala" : "Criar escala"}</DialogTitle>
         </DialogHeader>
@@ -174,7 +176,7 @@ export function EditorEscala({
               <p className="text-sm text-muted-foreground">
                 {formatarData(evento.date)} · {hora(evento.start_time)}{evento.end_time ? `–${hora(evento.end_time)}` : ""}
               </p>
-              <div className="flex items-end gap-3">
+              <div className="grid items-end gap-3 sm:grid-cols-[auto_minmax(0,1fr)]">
                 <div className="space-y-1.5">
                   <Label>Pessoas necessárias (opcional)</Label>
                   <Select value={String(qtd)} onValueChange={(v) => setQtd(Number(v))}>
@@ -236,7 +238,7 @@ export function EditorEscala({
 
               {erro ? <p className="text-sm text-destructive">{erro}</p> : null}
               {podeExcluir ? (
-                <Button variant="ghost" className="w-full text-destructive" onClick={() => void excluir()} disabled={salvando}>Excluir escala</Button>
+                <Button variant="ghost" className="w-full text-destructive" onClick={() => void excluir()} disabled={salvando}>Excluir escala deste ministério</Button>
               ) : null}
               <div className="grid gap-2 sm:grid-cols-3">
                 <Button variant="ghost" onClick={onFechar}>Cancelar</Button>
