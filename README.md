@@ -1,149 +1,60 @@
 # Libens
 
-Libens is an application for managing volunteer teams, schedules, and activities.
+![Capa ilustrativa do Libens com telas de escalas e disponibilidade](docs/libens-portfolio.jpg)
 
-The project is being developed with the goal of creating a simple, modern, and practical platform for organizations, churches, groups, and teams that need to organize people and schedules efficiently.
+**Aplicação web para organizar voluntários, ministérios e escalas de serviço na igreja.**
 
-## 🇺🇸 English
+Criei o Libens a partir de uma necessidade da minha congregação. Para montar uma escala, os líderes precisam saber quem pode servir em cada data, distribuir as pessoas entre os ministérios e ajustar a equipe quando alguém precisa de uma substituição. Os voluntários, por sua vez, precisam conseguir consultar a escala atual e informar a própria disponibilidade pelo celular.
 
-### About the Project
-
-Libens is being developed as a web application focused on managing volunteers and team schedules.
-
-The project is being built using **Lovable, GitHub, Visual Studio Code, React, TypeScript, and Supabase**.
-
-The development process combines AI-assisted development with traditional programming. Lovable is used to accelerate the creation of interfaces and complex features, while Visual Studio Code is used for direct code editing, improvements, testing, and customization.
-
-GitHub is used for version control and to keep the project synchronized between the development environment and Lovable.
-
-### Latest Update — Leader Home
-
-The leader home page was simplified to prioritize **Next assignment**, **My upcoming assignments**, and **My availability**. Pending reminders remain visible when present.
-
-The duplicated top shortcuts and the **My ministries**, **Next event**, and **Schedules I manage** sections were removed from this view. Management features remain available through the navigation menu.
-
-This layout also applies to users assigned as ministry leaders, even when their profile role differs. The implementation is in [src/routes/app.inicio.tsx](src/routes/app.inicio.tsx).
-
-[Open Libens](https://pic-snapshot-creator.lovable.app/login)
-
-### Development Workflow
-
-The current development workflow is:
-
-```text
-Lovable
-   ↓
-GitHub
-   ↓
-Visual Studio Code
-   ↓
-Code changes and testing
-   ↓
-Git commit
-   ↓
-Git push
-   ↓
-GitHub
-   ↓
-Lovable synchronization
-```
-
-For simple changes, development can be done directly in Visual Studio Code and synchronized through GitHub.
-
-For more complex features, Lovable can be used to generate the initial implementation, which can then be reviewed, modified, and tested locally.
-
-### Technologies
-
-* React
-* TypeScript
-* Vite
-* Tailwind CSS
-* Supabase
-* Lovable
-* GitHub
-* Visual Studio Code
-
-### Project Goals
-
-The main goals of Libens are:
-
-* Manage volunteers and team members
-* Create and manage schedules
-* Organize teams and activities
-* Simplify communication and organization
-* Provide a clean and easy-to-use interface
-* Build a scalable foundation for future features
-
----
-
-## 🇧🇷 Português
-
-### Sobre o Projeto
-
-O Libens está sendo desenvolvido como uma aplicação web focada no gerenciamento de voluntários e escalas de equipes.
-
-O projeto tem como objetivo criar uma plataforma simples, moderna e prática para organizações, igrejas, grupos e equipes que precisam organizar pessoas e escalas de forma eficiente.
-
-O desenvolvimento utiliza **Lovable, GitHub, Visual Studio Code, React, TypeScript e Supabase**.
-
-O processo de desenvolvimento combina programação assistida por inteligência artificial com programação tradicional. O Lovable é utilizado para acelerar a criação de interfaces e funcionalidades mais complexas, enquanto o Visual Studio Code é utilizado para edição direta do código, melhorias, testes e personalizações.
-
-O GitHub é utilizado para controle de versão e para manter o projeto sincronizado entre o ambiente de desenvolvimento e o Lovable.
-
-### Atualização recente — Início dos líderes
-
-A página inicial dos líderes foi simplificada para priorizar **Próxima escala**, **Minhas próximas escalas** e **Minha disponibilidade**. Os lembretes pendentes continuam visíveis quando existem.
-
-Foram retirados dessa visualização os atalhos superiores duplicados e os blocos **Meus ministérios**, **Próximo evento** e **Escalas que gerencio**. As funções de gerenciamento continuam acessíveis pelo menu de navegação.
-
-Esse layout também se aplica a usuários vinculados como líderes de ministério, mesmo quando o papel do perfil é diferente. A implementação está em [src/routes/app.inicio.tsx](src/routes/app.inicio.tsx).
+O projeto está publicado e **já está sendo implementado na congregação**. A implantação é uma oportunidade de observar como a ferramenta se encaixa na rotina dos ministérios e ajustar os fluxos conforme o uso.
 
 [Acessar o Libens](https://pic-snapshot-creator.lovable.app/login)
 
-### Fluxo de Desenvolvimento
+## O que o Libens faz
 
-O fluxo atual de desenvolvimento é:
+| Perfil | Fluxos principais |
+| --- | --- |
+| **Servo** | Informa disponibilidade, consulta suas escalas e solicita substituição. |
+| **Líder** | Organiza eventos e escalas do ministério, consulta a disponibilidade da equipe e acompanha substituições. |
+| **Pastor(a)** | Acompanha as escalas, o histórico de participações e a organização dos ministérios pelo painel pastoral. |
+| **Administrador** | Gerencia usuários, perfis de acesso, lideranças e ministérios. |
 
-```text
-Lovable
-   ↓
-GitHub
-   ↓
-Visual Studio Code
-   ↓
-Alterações no código e testes
-   ↓
-Git commit
-   ↓
-Git push
-   ↓
-GitHub
-   ↓
-Sincronização com Lovable
+A criação de escalas para o mês atual parte dos eventos cadastrados e da disponibilidade informada. O sistema sugere pessoas, considera conflitos de horário e sinaliza vagas para preenchimento manual. A equipe responsável pode revisar a escala antes de confirmá-la.
+
+A aplicação também inclui histórico de eventos, lembretes de escala, instalação como PWA e opções de tamanho da fonte. A entrega de avisos no aparelho depende de o app estar em execução. [Instalação](docs/install-mobile.md) · [Notificações](docs/notifications.md)
+
+## Como desenvolvi
+
+Comecei pelos fluxos da congregação: informar disponibilidade, montar e consultar escalas e lidar com substituições. Usei o **Lovable** para estruturar a aplicação e acelerar a prototipação. Usei o **Visual Studio Code** para revisar o código, ajustar a interface e validar os fluxos. Mantive o histórico de mudanças com **Git e GitHub**, sincronizado com o projeto no Lovable.
+
+Um dos desafios foi transformar as responsabilidades da congregação em permissões da aplicação. Por exemplo, o Líder precisa gerenciar as escalas do próprio ministério, enquanto o Servo precisa consultar sua escala e solicitar substituição. As regras de acesso são verificadas no banco, além de orientar quais ações aparecem na interface.
+
+## Ferramentas e tecnologias
+
+| Área | Ferramentas |
+| --- | --- |
+| Interface | React, TypeScript, Tailwind CSS, Radix UI e Lucide |
+| Rotas e dados | TanStack Start, TanStack Router e TanStack Query |
+| Autenticação e banco | Supabase Auth e PostgreSQL, com políticas de acesso por linha (RLS) e migrações SQL |
+| Desenvolvimento e publicação | Lovable, Visual Studio Code, Vite, Node.js e npm |
+| Controle de versão e qualidade | Git, GitHub, GitHub Actions, ESLint, Prettier e PGlite |
+| Experiência no celular | PWA com manifesto e service worker |
+
+## Testes e execução local
+
+Com Node.js 24, instale as dependências com `npm ci`. Configure `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` com os valores de um projeto Supabase de desenvolvimento preparado com as migrações do repositório. Depois, execute `npm run dev`.
+
+```bash
+npm test
+npm run typecheck
+npm run build
 ```
 
-Para alterações simples, o desenvolvimento pode ser realizado diretamente no Visual Studio Code e sincronizado através do GitHub.
+A suíte usa dados fictícios para verificar regras de escalas, conflitos, substituições e permissões. Os testes de banco usam PGlite. O GitHub Actions executa os testes, a verificação de tipos e o build.
 
-Para funcionalidades mais complexas, o Lovable pode ser utilizado para gerar uma primeira implementação, que posteriormente pode ser revisada, modificada e testada localmente.
+- [Geração de escalas mensais](docs/monthly-schedules.md)
+- [Painéis, acessos e acessibilidade](docs/panels-accessibility.md)
+- [Testes automatizados](tests/)
+- [Verificações no GitHub Actions](.github/workflows/checks.yml)
 
-### Tecnologias
-
-* React
-* TypeScript
-* Vite
-* Tailwind CSS
-* Supabase
-* Lovable
-* GitHub
-* Visual Studio Code
-
-### Objetivos do Projeto
-
-Os principais objetivos do Libens são:
-
-* Gerenciar voluntários e membros das equipes
-* Criar e gerenciar escalas
-* Organizar equipes e atividades
-* Facilitar a comunicação e a organização
-* Oferecer uma interface limpa e fácil de utilizar
-* Criar uma base escalável para futuras funcionalidades
+**Desenvolvido por Caio Camelo.**
