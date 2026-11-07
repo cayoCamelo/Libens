@@ -11,3 +11,8 @@
 - [x] Trocas minimizadas e ações de presença preservadas
 - [x] 35 testes, typecheck e build; verificação autenticada de leitura em 320px/390px
 - [ ] Verificação com sessões reais de cada perfil e operações de escrita em homologação
+
+## SEO
+- [ ] Corrigir título principal, metadados por página e sitemap apenas de páginas públicas
+- [ ] Validar correções sem publicar
+- [ ] Concluir Search Console — bloqueado: conexão recusada pelo usuário

@@ -28,11 +28,12 @@ function InicioPage() {
   if (!carregando && d.global) return <Navigate to="/app/painel" replace />;
   return (
     <AppShell
-      titulo={`Olá, ${usuario.nome.split(" ")[0]}`}
+      titulo="Início"
       descricao={
         perfil === "lider" || d.lidero.size > 0 ? "Dias em que você vai servir" : "Suas escalas"
       }
     >
+      <p className="mb-4 text-sm text-muted-foreground">Olá, {usuario.nome.split(" ")[0]}</p>
       {d.erro ? (
         <p role="alert" className="text-destructive">
           Não foi possível carregar as escalas. Tente novamente.
