@@ -15,3 +15,5 @@
 - Delete events only through explicit confirmation and preserve foreign-key restrictions to protect linked schedules.
 - Use the existing notifications table and scheduled reminder function; never create a parallel notification system.
 - Share the event editor between Eventos and Escalas dialogs; keep schedule-view filtering and permission gates in browser-safe pure helpers with regression tests, while RLS remains authoritative.
+- Keep page-specific SEO tags in leaf route heads through the browser-safe pageHead helper; root owns only sitewide defaults, and canonicals must self-reference without personal data.
+- Derive the sitemap from explicit route decisions; exclude the private app subtree, redirects and password flows, without database reads or changes to access policies.

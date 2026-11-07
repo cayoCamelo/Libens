@@ -84,18 +84,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "theme-color", content: "#061918" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-title", content: "Libens" },
-      { title: "Libens — Gestão de voluntários e escalas" },
-      {
-        name: "description",
-        content:
-          "Libens organiza ministérios, servos, eventos, disponibilidades e escalas da sua igreja.",
-      },
-      { property: "og:title", content: "Libens — Gestão de voluntários e escalas" },
-      {
-        property: "og:description",
-        content:
-          "Libens organiza ministérios, servos, eventos, disponibilidades e escalas da sua igreja.",
-      },
+      { property: "og:site_name", content: "Libens" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
